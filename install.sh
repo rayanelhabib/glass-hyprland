@@ -241,110 +241,32 @@ if [ -f "$EXISTING_SETTINGS" ] && command -v jq &>/dev/null; then
     fi
 fi
 
-WORKER_URL="https://dots-telemetry.ilyamiro-work.workers.dev"
+WORKER_URL=""
 
 send_telemetry() {
-    local mode=$1
-    if [[ "$OS_NAME" =~ "Fedora" ]] || [[ "$DETECTED_OS" == "fedora" ]]; then
-        return 0
-    fi
-
-    if [[ -n "$WORKER_URL" && "$WORKER_URL" != *"YOUR_USERNAME"* ]]; then
-        if [[ "$mode" == "init" ]]; then
-            local payload=$(cat <<EOF
-{
-  "type": "init",
-  "version": "${DOTS_VERSION}",
-  "id": "${TELEMETRY_ID}",
-  "os": "${OS_NAME//\"/\\\"}"
+    return 0
 }
-EOF
-)
-            curl -X POST -H "Content-Type: application/json" -d "$payload" "$WORKER_URL" -s -o /dev/null &
-
-        elif [[ "$mode" == "full" ]]; then
-            local payload=$(cat <<EOF
-{
-  "type": "full",
-  "version": "${DOTS_VERSION}",
-  "id": "${TELEMETRY_ID}",
-  "os": "${OS_NAME//\"/\\\"}"
-}
-EOF
-)
-            curl -X POST -H "Content-Type: application/json" -d "$payload" "$WORKER_URL" -s -o /dev/null &
-
-        elif [[ "$mode" == "done" ]]; then
-            local payload=""
-            local failed_str=""
-
-            if [[ "$ENABLE_TELEMETRY" == true ]]; then
-                if [[ ${#FAILED_PKGS[@]} -gt 0 ]]; then
-                    failed_str="${FAILED_PKGS[*]}"
-                fi
-                
-                local ram=$(awk '/MemTotal/ {printf "%.1f GB", $2/1024/1024}' /proc/meminfo 2>/dev/null || echo "Unknown")
-                local kernel=$(uname -r 2>/dev/null || echo "Unknown")
-                local current_de=${XDG_CURRENT_DESKTOP:-"TTY / Unknown"}
-                
-                payload=$(cat <<EOF
-{
-  "type": "done",
-  "version": "${DOTS_VERSION}",
-  "id": "${TELEMETRY_ID}",
-  "telemetry_enabled": true,
-  "failed_packages": "${failed_str//\"/\\\"}",
-  "os": "${OS_NAME//\"/\\\"}",
-  "kernel": "${kernel//\"/\\\"}",
-  "ram": "${ram//\"/\\\"}",
-  "de": "${current_de//\"/\\\"}",
-  "cpu": "${CPU_INFO//\"/\\\"}",
-  "gpu": "${GPU_INFO//\"/\\\"}"
-}
-EOF
-)
-            else
-                payload=$(cat <<EOF
-{
-  "type": "done",
-  "version": "${DOTS_VERSION}",
-  "id": "${TELEMETRY_ID}",
-  "telemetry_enabled": false,
-  "os": "${OS_NAME//\"/\\\"}"
-}
-EOF
-)
-            fi
-            curl -X POST -H "Content-Type: application/json" -d "$payload" "$WORKER_URL" -s -o /dev/null &
-        fi
-    fi
-}
-
-send_telemetry "init"
 
 draw_header() {
     clear 
     printf "${BOLD}${C_CYAN}"
     cat << "EOF"
- ██╗██╗     ██╗   ██╗ █████╗ ███╗   ███╗██╗██████╗  ██████╗ 
- ██║██║     ╚██╗ ██╔╝██╔══██╗████╗ ████║██║██╔══██╗██╔═══██╗
- ██║██║      ╚████╔╝ ███████║██╔████╔██║██║██████╔╝██║   ██║
- ██║██║       ╚██╔╝  ██╔══██║██║╚██╔╝██║██║██╔══██╗██║   ██║
- ██║███████╗   ██║   ██║  ██║██║ ╚═╝ ██║██║██║  ██║╚██████╔╝
- ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═╝ ╚═════╝ 
+ ██████╗██╗   ██╗██████╗ ███████╗██████╗  ██████╗ ██╗      █████╗ ███████╗██████╗ 
+██╔════╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔════╝ ██║     ██╔══██╗██╔════╝██╔══██╗
+██║      ╚████╔╝ ██████╔╝█████╗  ██████╔╝██║  ███╗██║     ███████║███████╗██████╔╝
+██║       ╚██╔╝  ██╔══██╗██╔══╝  ██╔══██╗██║   ██║██║     ██╔══██║╚════██║██╔═══╝ 
+╚██████╗   ██║   ██████╔╝███████╗██║  ██║╚██████╔╝███████╗██║  ██║███████║██║     
+ ╚═════╝   ╚═╝   ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝     
 EOF
     printf "${RESET}\n"
 
-    local OSC8_GH="\e]8;;https://github.com/ilyamiro/imperative-dots.git\a"
-    local OSC8_TW="\e]8;;https://twitter.com/ilyamirox\a"
-    local OSC8_RD="\e]8;;https://reddit.com/u/ilyamiro1\a"
-    local OSC8_KF="\e]8;;https://ko-fi.com/ilyamiro\a"
+    local OSC8_GH="\e]8;;https://github.com/rayanelhabib/cyberglass-hyprland\a"
     local OSC8_END="\e]8;;\a"
 
     printf "\033[K${C_BLUE} -----------------------------------------------------------------${RESET}\n"
-    printf "\033[K${BOLD}${C_GREEN} GitHub:${RESET}  ${OSC8_GH}https://github.com/ilyamiro/imperative-dots.git${OSC8_END}\n"
-    printf "\033[K${BOLD}${C_CYAN} Twitter:${RESET} ${OSC8_TW}@ilyamirox${OSC8_END}  |  ${BOLD}${C_RED}Reddit:${RESET} ${OSC8_RD}u/ilyamiro1${OSC8_END}\n"
-    printf "\033[K${BOLD}${C_MAGENTA} Donate:${RESET}  ${OSC8_KF}Donate on Ko-fi (Help the project!)${OSC8_END}\n"
+    printf "\033[K${BOLD}${C_GREEN} GitHub:${RESET}  ${OSC8_GH}https://github.com/rayanelhabib/cyberglass-hyprland${OSC8_END}\n"
+    printf "\033[K${BOLD}${C_CYAN} Author:${RESET} Rayan El Habib\n"
+    printf "\033[K${C_BLUE} -----------------------------------------------------------------${RESET}\n"
     printf "\033[K${C_BLUE} -----------------------------------------------------------------${RESET}\n"
     printf "\033[K${BOLD} User:           ${RESET} %s\n" "$USER_NAME"
     printf "\033[K${BOLD} OS:             ${RESET} %s\n" "$OS_NAME"
@@ -673,7 +595,7 @@ manage_keyboard() {
 show_overview() {
     draw_header
     echo -e "${BOLD}${C_MAGENTA}=== System Overview & Keybinds ===${RESET}\n"
-    echo -e "This configuration is an adaptation of the ${BOLD}${C_CYAN}ilyamiro/nixos-configuration${RESET} setup."
+    echo -e "This configuration is a ${BOLD}${C_CYAN}CyberGlass Hyprland${RESET} setup."
     echo -e "Here are the core keybindings to navigate your new system once installed:\n"
 
     print_kb() {
@@ -911,7 +833,7 @@ prompt_optional_features_menu() {
     }
 
     if command -v jq &>/dev/null && command -v curl &>/dev/null; then
-        local UPDATES_JSON=$(curl -s "https://raw.githubusercontent.com/ilyamiro/imperative-dots/${TARGET_BRANCH}/updates.json" 2>/dev/null)
+        local UPDATES_JSON=$(curl -s "https://raw.githubusercontent.com/rayanelhabib/cyberglass-hyprland/${TARGET_BRANCH}/updates.json" 2>/dev/null)
         if [ -n "$UPDATES_JSON" ]; then
             
             # Extract all version numbers that have force_startup_overwrite set to true
@@ -1261,7 +1183,7 @@ fi
 
 # --- 3. Repository Cloning & Wallpapers ---
 echo -e "\n${C_CYAN}[ INFO ]${RESET} Setting up Dotfiles Repository..."
-REPO_URL="https://github.com/ilyamiro/imperative-dots.git"
+REPO_URL="https://github.com/rayanelhabib/cyberglass-hyprland.git"
 CLONE_DIR="$HOME/.hyprland-dots"
 
 OLD_COMMIT=""
@@ -1301,7 +1223,7 @@ mkdir -p "$WALLPAPER_DIR"
 if [ "$(ls -A "$WALLPAPER_DIR" 2>/dev/null | grep -E '\.(jpg|png|jpeg|gif|webp)$')" ]; then
     echo -e "  -> ${C_GREEN}Wallpapers already present in $WALLPAPER_DIR. Skipping download.${RESET}"
 else
-    WALLPAPER_REPO="https://github.com/ilyamiro/shell-wallpapers.git"
+    WALLPAPER_REPO="https://github.com/rayanelhabib/shell-wallpapers.git"
     WALLPAPER_CLONE_DIR="/tmp/shell-wallpapers"
 
     if [ -d "$WALLPAPER_CLONE_DIR" ]; then
@@ -1879,9 +1801,7 @@ EOF
 echo -e "${RESET}\n"
 
 echo -e "${BOLD}${C_MAGENTA}=================================================================${RESET}"
-echo -e "${BOLD}${C_YELLOW} Support the Creator:${RESET}"
-echo -e " If you enjoy this project, consider buying me a coffee!"
-echo -e " ${BOLD}${C_CYAN}Ko-fi:${RESET} https://ko-fi.com/ilyamiro"
+echo -e "${BOLD}${C_YELLOW} CyberGlass Hyprland:${RESET} Installation Complete!"
 echo -e "${BOLD}${C_MAGENTA}=================================================================${RESET}\n"
 
 if [ ${#FAILED_PKGS[@]} -ne 0 ]; then

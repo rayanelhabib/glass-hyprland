@@ -2,7 +2,7 @@
   "videos": [
     {
       "version": "1.7.3",
-      "url": "https://github.com/ilyamiro/media/releases/download/v1.7.3/update_1_7_3.mp4"
+      "url": "https://github.com/rayanelhabib/media/releases/download/v1.7.3/update_1_7_3.mp4"
     },
     {
       "version": "1.7.4-1",
@@ -12,11 +12,11 @@
     },
     {
       "version": "1.7.5",
-      "url": "https://github.com/ilyamiro/media/releases/download/v1.7.5/update.mp4"
+      "url": "https://github.com/rayanelhabib/media/releases/download/v1.7.5/update.mp4"
     },
     {
       "version": "1.7.6",
-      "url": "https://github.com/ilyamiro/media/releases/download/v1.7.6/update.mp4"
+      "url": "https://github.com/rayanelhabib/media/releases/download/v1.7.6/update.mp4"
     }
   ]
 }
