@@ -511,10 +511,19 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: Math.round(20 * window.sf)
-            color: window.base
-            border.color: window.surface0
+            color: "transparent"
+            border.color: Qt.rgba(1, 1, 1, 0.15)
             border.width: 1
             clip: true
+
+            Glass {
+                anchors.fill: parent
+                tint: window.base
+                tintOpacity: 0.25
+                cornerRadius: Math.round(20 * window.sf)
+                borderOpacity: 0.35
+                sheenStrength: 1.0
+            }
 
             // =======================================================
             // AMBIENT WIDGET COLOR BLOBS (Spread Out)
@@ -830,6 +839,8 @@ Item {
                             opacity: window.targetMonthOffset !== 0 ? 1.0 : 0.0
                             visible: opacity > 0
                             Behavior on opacity { NumberAnimation { duration: 200 } }
+                            scale: homeMa.pressed ? 0.85 : (homeMa.containsMouse ? 1.08 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                             Text { anchors.centerIn: parent; text: "󰃭"; font.family: "Iosevka Nerd Font"; color: window.text; font.pixelSize: Math.round(16 * window.sf) }
                             MouseArea { 
                                 id: homeMa; anchors.fill: parent; hoverEnabled: window.targetMonthOffset !== 0; 
@@ -840,6 +851,8 @@ Item {
                         Rectangle {
                             Layout.preferredWidth: Math.round(32 * window.sf); Layout.preferredHeight: Math.round(32 * window.sf); radius: Math.round(16 * window.sf)
                             color: prevMa.containsMouse ? window.surface1 : "transparent"
+                            scale: prevMa.pressed ? 0.85 : (prevMa.containsMouse ? 1.08 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                             Text { anchors.centerIn: parent; text: ""; font.family: "Iosevka Nerd Font"; color: window.text; font.pixelSize: Math.round(16 * window.sf) }
                             MouseArea { id: prevMa; anchors.fill: parent; hoverEnabled: true; onClicked: window.setMonthOffset(window.targetMonthOffset - 1) }
                         }
@@ -862,6 +875,8 @@ Item {
                         Rectangle {
                             Layout.preferredWidth: Math.round(32 * window.sf); Layout.preferredHeight: Math.round(32 * window.sf); radius: Math.round(16 * window.sf)
                             color: nextMa.containsMouse ? window.surface1 : "transparent"
+                            scale: nextMa.pressed ? 0.85 : (nextMa.containsMouse ? 1.08 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                             Text { anchors.centerIn: parent; text: ""; font.family: "Iosevka Nerd Font"; color: window.text; font.pixelSize: Math.round(16 * window.sf) }
                             MouseArea { id: nextMa; anchors.fill: parent; hoverEnabled: true; onClicked: window.setMonthOffset(window.targetMonthOffset + 1) }
                         }
@@ -869,6 +884,8 @@ Item {
                         Rectangle {
                             Layout.preferredWidth: Math.round(32 * window.sf); Layout.preferredHeight: Math.round(32 * window.sf); radius: Math.round(16 * window.sf)
                             color: diaryMa.containsMouse ? window.surface1 : "transparent"
+                            scale: diaryMa.pressed ? 0.85 : (diaryMa.containsMouse ? 1.08 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                             Text { anchors.centerIn: parent; text: "+"; font.family: "Iosevka Nerd Font"; color: diaryMa.containsMouse ? window.mauve : window.text; font.pixelSize: Math.round(32 * window.sf) }
                             MouseArea { 
                                 id: diaryMa; anchors.fill: parent; hoverEnabled: true; 
@@ -912,7 +929,7 @@ Item {
                                 
                                 color: isToday ? window.textAccent : (dayMa.containsMouse ? Qt.alpha(window.surface2, 0.4) : "transparent")
                                 radius: Math.round(10 * window.sf)
-                                scale: dayMa.containsMouse ? 1.2 : 1.0
+                                scale: dayMa.pressed ? 0.9 : (dayMa.containsMouse ? 1.2 : 1.0)
                                 border.color: isToday ? window.surface0 : (dayMa.containsMouse ? window.overlay0 : "transparent")
                                 border.width: isToday || dayMa.containsMouse ? 1 : 0
                                 

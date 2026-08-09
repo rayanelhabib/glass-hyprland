@@ -1,5 +1,5 @@
 {
-  "uiScale": 1,
+  "uiScale": 1.2,
   "openGuideAtStartup": true,
   "topbarHelpIcon": true,
   "workspaceCount": 8,
@@ -528,6 +528,9 @@
     },
     {
       "command": "~/.config/hypr/scripts/update_notifier.sh"
+    },
+    {
+      "command": "bash -c 'amixer -c 2 sset \"Mic Boost\" 3 2>/dev/null; amixer -c 2 sset Capture cap 100% 2>/dev/null; wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 1.30'"
     }
   ]
 }

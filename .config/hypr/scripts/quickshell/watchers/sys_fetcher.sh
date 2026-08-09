@@ -26,8 +26,8 @@ TX_RATE=$(((tx2 - tx1) * 2))
 # --- RAM Calculation ---
 while IFS=":" read -r key val; do
     case "$key" in
-        MemTotal) TOTAL_MEM=$(echo "$val" | awk '{print $1}') ;;
-        MemAvailable) AVAIL_MEM=$(echo "$val" | awk '{print $1}') ;;
+        MemTotal*) read -r TOTAL_MEM _ <<< "$val" ;;
+        MemAvailable*) read -r AVAIL_MEM _ <<< "$val" ;;
     esac
 done < /proc/meminfo
 USED_MEM=$((TOTAL_MEM - AVAIL_MEM))
@@ -36,35 +36,49 @@ RAM_GB=$(awk "BEGIN {printf \"%.1f\", $USED_MEM / 1024 / 1024}")
 
 # --- Temperature Calculation ---
 TEMP_RAW=""
+TEMP_FILE=""
 
-# Attempt 1: Check hwmon for known CPU temperature drivers (Intel, AMD, ARM)
-for hwmon in /sys/class/hwmon/hwmon*; do
-    if [ -f "$hwmon/name" ]; then
-        hwmon_name=$(cat "$hwmon/name" 2>/dev/null)
-        if [[ "$hwmon_name" =~ ^(coretemp|k10temp|zenpower|cpu_thermal|bcm2835_thermal)$ ]]; then
-            # Usually temp1_input is the main package/die temp
-            if [ -f "$hwmon/temp1_input" ]; then
-                TEMP_RAW=$(cat "$hwmon/temp1_input" 2>/dev/null)
-                break
-            fi
-        fi
-    fi
-done
+if [ -n "$QS_RUN_DIR" ] && [ -f "$QS_RUN_DIR/sys_temp_path" ]; then
+    TEMP_FILE=$(cat "$QS_RUN_DIR/sys_temp_path" 2>/dev/null)
+fi
 
-# Attempt 2: Fallback to thermal_zone for known CPU identifiers
-if [ -z "$TEMP_RAW" ]; then
-    for tz in /sys/class/thermal/thermal_zone*; do
-        if [ -f "$tz/type" ]; then
-            tz_type=$(cat "$tz/type" 2>/dev/null)
-            if [[ "$tz_type" =~ ^(x86_pkg_temp|cpu_thermal|cpu-thermal)$ ]]; then
-                TEMP_RAW=$(cat "$tz/temp" 2>/dev/null)
-                break
+if [ -n "$TEMP_FILE" ] && [ -f "$TEMP_FILE" ]; then
+    TEMP_RAW=$(cat "$TEMP_FILE" 2>/dev/null)
+else
+    # Attempt 1: Check hwmon for known CPU temperature drivers (Intel, AMD, ARM)
+    for hwmon in /sys/class/hwmon/hwmon*; do
+        if [ -f "$hwmon/name" ]; then
+            hwmon_name=$(cat "$hwmon/name" 2>/dev/null)
+            if [[ "$hwmon_name" =~ ^(coretemp|k10temp|zenpower|cpu_thermal|bcm2835_thermal)$ ]]; then
+                if [ -f "$hwmon/temp1_input" ]; then
+                    TEMP_FILE="$hwmon/temp1_input"
+                    TEMP_RAW=$(cat "$TEMP_FILE" 2>/dev/null)
+                    break
+                fi
             fi
         fi
     done
+
+    # Attempt 2: Fallback to thermal_zone for known CPU identifiers
+    if [ -z "$TEMP_RAW" ]; then
+        for tz in /sys/class/thermal/thermal_zone*; do
+            if [ -f "$tz/type" ]; then
+                tz_type=$(cat "$tz/type" 2>/dev/null)
+                if [[ "$tz_type" =~ ^(x86_pkg_temp|cpu_thermal|cpu-thermal)$ ]]; then
+                    TEMP_FILE="$tz/temp"
+                    TEMP_RAW=$(cat "$TEMP_FILE" 2>/dev/null)
+                    break
+                fi
+            fi
+        done
+    fi
+
+    if [ -n "$TEMP_FILE" ] && [ -n "$QS_RUN_DIR" ]; then
+        echo "$TEMP_FILE" > "$QS_RUN_DIR/sys_temp_path"
+    fi
 fi
 
-# Attempt 3: Ultimate fallback to the first available hardware monitor or thermal zone
+# Attempt 3: Ultimate fallback
 if [ -z "$TEMP_RAW" ]; then
     TEMP_RAW=$(cat /sys/class/hwmon/hwmon0/temp1_input 2>/dev/null || cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)
 fi

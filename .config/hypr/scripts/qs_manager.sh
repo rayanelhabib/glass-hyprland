@@ -144,6 +144,10 @@ handle_wallpaper_prep() {
 }
 
 handle_network_prep() {
+    if [ -f "$BT_PID_FILE" ]; then
+        kill "$(cat "$BT_PID_FILE")" 2>/dev/null
+        rm -f "$BT_PID_FILE"
+    fi
     echo "" > "$BT_SCAN_LOG"
     { echo "scan on"; sleep infinity; } | stdbuf -oL bluetoothctl > "$BT_SCAN_LOG" 2>&1 &
     echo $! > "$BT_PID_FILE"

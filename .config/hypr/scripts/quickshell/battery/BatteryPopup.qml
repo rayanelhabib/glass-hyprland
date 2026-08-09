@@ -324,10 +324,19 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: window.s(20)
-            color: window.base
-            border.color: window.surface0 
+            color: "transparent"
+            border.color: Qt.rgba(1, 1, 1, 0.15)
             border.width: 1
             clip: true
+
+            Glass {
+                anchors.fill: parent
+                tint: window.base
+                tintOpacity: 0.25
+                cornerRadius: window.s(20)
+                borderOpacity: 0.35
+                sheenStrength: 1.0
+            }
 
             // Rotating Background Blobs - Spanning across the whole widget natively
             Rectangle {

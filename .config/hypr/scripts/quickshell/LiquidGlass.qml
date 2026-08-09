@@ -58,20 +58,23 @@ Rectangle {
         Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
 
         onPaint: {
+            if (width <= 0 || height <= 0) return;
             var ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
-            var r = Math.min(width, height) * 0.42;
+            var r = Math.max(1, Math.min(width, height) * 0.42);
             ctx.save();
             ctx.translate(root.cursorX, root.cursorY);
             ctx.scale(1.8, 0.55);
-            var g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
-            g.addColorStop(0, "rgba(255,255,255,0.55)");
-            g.addColorStop(0.5, "rgba(255,255,255,0.18)");
-            g.addColorStop(1, "rgba(255,255,255,0)");
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(0, 0, r, 0, Math.PI * 2);
-            ctx.fill();
+            try {
+                var g = ctx.createRadialGradient(0, 0, 0.1, 0, 0, r);
+                g.addColorStop(0, "rgba(255,255,255,0.55)");
+                g.addColorStop(0.5, "rgba(255,255,255,0.18)");
+                g.addColorStop(1, "rgba(255,255,255,0)");
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+                ctx.fill();
+            } catch(e) {}
             ctx.restore();
         }
     }

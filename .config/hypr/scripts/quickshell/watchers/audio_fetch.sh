@@ -36,8 +36,6 @@ toggle_mute() {
     elif command -v pamixer &> /dev/null; then
         LC_ALL=C pamixer --toggle-mute 2>/dev/null
     fi
-    if [ "$(is_muted)" = "true" ]; then notify-send -u low -i audio-volume-muted "Volume" "Muted"
-    else notify-send -u low -i audio-volume-high "Volume" "Unmuted ($(get_volume)%)"; fi
 }
 
 case $1 in

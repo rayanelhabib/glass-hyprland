@@ -84,10 +84,8 @@ get_network_data() {
 toggle_wifi() {
     if [ "$(get_wifi_radio)" = "enabled" ]; then
         LC_ALL=C nmcli radio wifi off
-        notify-send -u low -i network-wireless-disabled "WiFi" "Disabled"
     else
         LC_ALL=C nmcli radio wifi on
-        notify-send -u low -i network-wireless-enabled "WiFi" "Enabled"
     fi
 }
 

@@ -829,9 +829,19 @@ Variants {
                         width: floatingWidget.s(15) + parent.width
                         height: parent.height
                         radius: floatingWidget.s(15) 
-                        color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.18) 
+                        color: "transparent" 
                         border.width: 1
-                        border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.10)
+                        border.color: Qt.rgba(1, 1, 1, 0.15)
+                        clip: true
+
+                        Glass {
+                            anchors.fill: parent
+                            tint: mocha.base
+                            tintOpacity: 0.25
+                            cornerRadius: floatingWidget.s(15)
+                            borderOpacity: 0.35
+                            sheenStrength: 1.0
+                        }
 
                         MouseArea {
                             id: sidebarDragArea

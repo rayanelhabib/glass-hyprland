@@ -23,5 +23,6 @@ ShellRoot {
     Main { musicAnchor: shellRoot.musicAnchor }
     TopBar { musicAnchor: shellRoot.musicAnchor }
     Floating {}
+    Dock {}
 }
 

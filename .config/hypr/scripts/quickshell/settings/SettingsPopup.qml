@@ -1006,6 +1006,12 @@ Item {
     }
 
     property real introContent: 0.0
+
+    // Cursor-following specular glare state (fed to glassSheen)
+    property real cursorX: 0
+    property real cursorY: 0
+    property real sheenGlow: 0.0
+
     Component.onCompleted: {
         root.tab0Loaded = true;
         startupSequence.start();
@@ -1168,7 +1174,7 @@ Item {
                                 Layout.preferredWidth: root.s(40)
                                 Layout.preferredHeight: root.s(22)
                                 radius: root.s(11)
-                                scale: toggle1Ma.containsMouse ? 1.05 : 1.0
+                                scale: toggle1Ma.pressed ? 0.9 : (toggle1Ma.containsMouse ? 1.05 : 1.0)
                                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
                                 color: Config.openGuideAtStartup
                                     ? (box0.isActive ? root.base : root.peach)
@@ -1236,7 +1242,7 @@ Item {
                             Rectangle {
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                                 Layout.preferredWidth: root.s(40); Layout.preferredHeight: root.s(22); radius: root.s(11)
-                                scale: toggle2Ma.containsMouse ? 1.05 : 1.0
+                                scale: toggle2Ma.pressed ? 0.9 : (toggle2Ma.containsMouse ? 1.05 : 1.0)
                                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
                                 color: Config.topbarHelpIcon
                                     ? (box1.isActive ? root.base : root.blue)
@@ -2852,7 +2858,24 @@ Item {
                 tint: "#ffffff"
                 cornerRadius: root.s(24)
                 bodyOpacity: 0.04
-                cursorSheen: false
+                cursorSheen: true
+                cursorX: root.cursorX
+                cursorY: root.cursorY
+                sheenGlow: root.sheenGlow
+            }
+
+            // Cursor-tracking glare catcher — declared below the content so
+            // interactive controls keep their hover; hover-only, no clicks.
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.NoButton
+                onPositionChanged: (mouse) => {
+                    root.cursorX = mouse.x;
+                    root.cursorY = mouse.y;
+                    root.sheenGlow = 1.0;
+                }
+                onExited: root.sheenGlow = 0.0
             }
 
             ColumnLayout {

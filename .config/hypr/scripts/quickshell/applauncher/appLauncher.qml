@@ -460,6 +460,9 @@ Item {
                     
                     transformOrigin: Item.Center 
 
+                    scale: ma.pressed ? 0.96 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
+
                     Rectangle {
                         anchors.fill: parent
                         radius: window.s(8)

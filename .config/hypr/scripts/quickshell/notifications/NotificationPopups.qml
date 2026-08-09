@@ -86,14 +86,6 @@ PanelWindow {
 
         MatugenColors { id: _theme }
 
-        property var blobPalette1: [_theme.mauve, _theme.blue, _theme.peach, _theme.green, _theme.pink]
-        property var blobPalette2: [_theme.sapphire, _theme.teal, _theme.maroon, _theme.yellow, _theme.red]
-
-        property real globalOrbitAngle: 0
-        NumberAnimation on globalOrbitAngle {
-            from: 0; to: Math.PI * 2; duration: 25000; loops: Animation.Infinite; running: true
-        }
-
         ListView {
             id: popupList
             anchors.fill: parent
@@ -129,8 +121,6 @@ PanelWindow {
 
                 property string fullSummary: model.summary || ""
                 property string fullBody: model.body || ""
-                property int typeLenSum: 0
-                property int typeLenBody: 0
                 property int popupUid: model.uid
 
                 // Resolved fresh each time via function — no binding across windows
@@ -162,25 +152,6 @@ PanelWindow {
                     }
                 }
 
-                ParallelAnimation {
-                    running: true
-                    NumberAnimation {
-                        target: delegateRoot; property: "typeLenSum"
-                        from: 0; to: fullSummary.length
-                        duration: Math.min(fullSummary.length * 20, 600)
-                        easing.type: Easing.OutCubic
-                    }
-                    SequentialAnimation {
-                        PauseAnimation { duration: 150 }
-                        NumberAnimation {
-                            target: delegateRoot; property: "typeLenBody"
-                            from: 0; to: fullBody.length
-                            duration: Math.min(fullBody.length * 15, 1200)
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-
                 Rectangle {
                     id: popupCard
                     anchors.fill: parent
@@ -190,24 +161,8 @@ PanelWindow {
                     border.width: 1
                     clip: true
 
-                    property color blob1Color: contentWrapper.blobPalette1[index % 5]
-                    property color blob2Color: contentWrapper.blobPalette2[index % 5]
-
-                    Rectangle {
-                        width: parent.width * 0.7; height: width; radius: width / 2
-                        x: (parent.width / 2 - width / 2) + Math.cos(contentWrapper.globalOrbitAngle * 2 + index) * 60
-                        y: (parent.height / 2 - height / 2) + Math.sin(contentWrapper.globalOrbitAngle * 2 + index) * 30
-                        color: popupCard.blob1Color
-                        opacity: 0.12
-                    }
-
-                    Rectangle {
-                        width: parent.width * 0.5; height: width; radius: width / 2
-                        x: (parent.width / 2 - width / 2) + Math.sin(contentWrapper.globalOrbitAngle * 1.5 - index) * -50
-                        y: (parent.height / 2 - height / 2) + Math.cos(contentWrapper.globalOrbitAngle * 1.5 - index) * -40
-                        color: popupCard.blob2Color
-                        opacity: 0.10
-                    }
+                    scale: cardBodyMa.pressed ? 0.97 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack } }
 
                     Timer {
                         interval: delegateRoot.effectiveTimeout > 0 ? delegateRoot.effectiveTimeout : 5000
@@ -217,6 +172,7 @@ PanelWindow {
 
                     // Card body click — invokes "default" action
                     MouseArea {
+                        id: cardBodyMa
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
@@ -254,62 +210,34 @@ PanelWindow {
 
                         Text {
                             text: model.appName || "System"
-                            font.family: "JetBrains Mono"
+                            font.family: "Inter, JetBrains Mono, sans-serif"
                             font.weight: Font.Medium
-                            font.pixelSize: 12 * popupWindow.uiScale
+                            font.pixelSize: 11 * popupWindow.uiScale
                             color: _theme.overlay1
                             Layout.fillWidth: true
                         }
 
-                        Item {
+                        Text {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: hiddenSummary.implicitHeight
-
-                            Text {
-                                id: hiddenSummary
-                                text: delegateRoot.fullSummary
-                                width: parent.width
-                                font.family: "JetBrains Mono"
-                                font.weight: Font.Bold
-                                font.pixelSize: 15 * popupWindow.uiScale
-                                wrapMode: Text.Wrap
-                                visible: false
-                            }
-
-                            Text {
-                                anchors.fill: parent
-                                text: delegateRoot.fullSummary.substring(0, delegateRoot.typeLenSum)
-                                font: hiddenSummary.font
-                                color: _theme.text
-                                wrapMode: Text.Wrap
-                            }
+                            text: delegateRoot.fullSummary
+                            font.family: "Inter, JetBrains Mono, sans-serif"
+                            font.weight: Font.DemiBold
+                            font.pixelSize: 14 * popupWindow.uiScale
+                            color: _theme.text
+                            wrapMode: Text.Wrap
                         }
 
-                        Item {
+                        Text {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: hiddenBody.implicitHeight
                             visible: delegateRoot.fullBody !== ""
-
-                            Text {
-                                id: hiddenBody
-                                text: delegateRoot.fullBody
-                                width: parent.width
-                                font.family: "JetBrains Mono"
-                                font.weight: Font.Medium
-                                font.pixelSize: 13 * popupWindow.uiScale
-                                wrapMode: Text.Wrap
-                                textFormat: Text.StyledText
-                                visible: false
-                            }
-
-                            Text {
-                                anchors.fill: parent
-                                text: delegateRoot.fullBody.substring(0, delegateRoot.typeLenBody)
-                                font: hiddenBody.font
-                                color: _theme.subtext0
-                                wrapMode: Text.Wrap
-                                textFormat: Text.StyledText
-                            }
+                            text: delegateRoot.fullBody
+                            font.family: "Inter, JetBrains Mono, sans-serif"
+                            font.weight: Font.Normal
+                            font.pixelSize: 12.5 * popupWindow.uiScale
+                            color: _theme.subtext0
+                            wrapMode: Text.Wrap
+                            textFormat: Text.StyledText
+                            lineHeight: 1.2
                         }
 
                         // --- INLINE ACTION BUTTONS ---
@@ -328,6 +256,9 @@ PanelWindow {
 
                                     property bool isPrimary: index === 0
 
+                                    scale: actionMouseArea.pressed ? 0.94 : 1.0
+                                    Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack } }
+
                                     color: {
                                         if (!_theme.blue) return "transparent";
                                         if (isPrimary) {
@@ -345,8 +276,8 @@ PanelWindow {
                                     Text {
                                         anchors.centerIn: parent
                                         text: modelData.text || "Action"
-                                        font.family: "JetBrains Mono"
-                                        font.weight: Font.Bold
+                                        font.family: "Inter, JetBrains Mono, sans-serif"
+                                        font.weight: Font.DemiBold
                                         font.pixelSize: 12 * popupWindow.uiScale
                                         color: isPrimary ? _theme.crust : _theme.text
                                     }

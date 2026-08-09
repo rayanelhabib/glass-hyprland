@@ -20,7 +20,9 @@ ENV_FILE="$(dirname "$0")/.env"
 # API Settings
 # Load environment variables silently
 if [ -f "$ENV_FILE" ]; then
-    export $(grep -v '^#' "$ENV_FILE" | xargs)
+    set -a
+    source "$ENV_FILE" 2>/dev/null
+    set +a
 fi
 
 # API Settings from .env
@@ -329,5 +331,14 @@ elif [[ "$1" == "--current-hex" ]]; then
         get_data
         hex=$(cat "$json_file" | jq -r '.current_hex')
     fi
+    echo "$hex"
+
+elif [[ "$1" == "--current-all" ]]; then
+    if [ ! -f "$json_file" ]; then get_data; fi
+    icon=$(jq -r '.current_icon // ""' "$json_file" 2>/dev/null)
+    temp=$(jq -r '.current_temp // "0.0"' "$json_file" 2>/dev/null)
+    hex=$(jq -r '.current_hex // "#cdd6f4"' "$json_file" 2>/dev/null)
+    echo "$icon"
+    echo "${temp}${UNIT_SYM}"
     echo "$hex"
 fi

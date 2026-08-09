@@ -17,7 +17,9 @@ qs_ensure_cache() {
     local WIDGET_STATE="$QS_STATE_DIR/$WIDGET_NAME"
     local WIDGET_RUN="$QS_RUN_DIR/$WIDGET_NAME"
     
-    mkdir -p "$WIDGET_CACHE" "$WIDGET_STATE" "$WIDGET_RUN"
+    [ -d "$WIDGET_CACHE" ] || mkdir -p "$WIDGET_CACHE"
+    [ -d "$WIDGET_STATE" ] || mkdir -p "$WIDGET_STATE"
+    [ -d "$WIDGET_RUN" ] || mkdir -p "$WIDGET_RUN"
     
     export "QS_CACHE_${WIDGET_UPPER}=$WIDGET_CACHE"
     export "QS_STATE_${WIDGET_UPPER}=$WIDGET_STATE"
@@ -25,10 +27,14 @@ qs_ensure_cache() {
 }
 
 # Pre-initialize for all existing QML widget folders in the main directory
-if [ -d "$QS_DIR" ]; then
-    for dir in "$QS_DIR"/*/; do
-        [ -d "$dir" ] || continue
-        WIDGET_NAME=$(basename "$dir")
-        qs_ensure_cache "$WIDGET_NAME"
-    done
+if [ ! -f "$QS_RUN_DIR/.initialized" ]; then
+    mkdir -p "$QS_CACHE_DIR" "$QS_STATE_DIR" "$QS_RUN_DIR" "$QS_LOG_DIR"
+    if [ -d "$QS_DIR" ]; then
+        for dir in "$QS_DIR"/*/; do
+            [ -d "$dir" ] || continue
+            WIDGET_NAME=$(basename "$dir")
+            qs_ensure_cache "$WIDGET_NAME"
+        done
+    fi
+    touch "$QS_RUN_DIR/.initialized"
 fi

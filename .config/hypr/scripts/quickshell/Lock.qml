@@ -536,13 +536,22 @@ ShellRoot {
                                 radius: height / 2 // Perfect pill shape natively!
                                 clip: true 
                                 
-                                color: lockUI.failed ? Qt.rgba(root.red.r, root.red.g, root.red.b, 0.1) : Qt.rgba(root.surface0.r, root.surface0.g, root.surface0.b, 0.5)
+                                color: "transparent"
                                 border.width: Math.max(1, 2 * screenRoot.sc)
                                 border.color: {
                                     if (lockUI.failed) return root.red;
                                     if (lockUI.authenticating) return root.peach;
                                     if (inputField.text.length > 0) return root.text;
-                                    return Qt.rgba(root.text.r, root.text.g, root.text.b, 0.08);
+                                    return Qt.rgba(1, 1, 1, 0.15);
+                                }
+
+                                Glass {
+                                    anchors.fill: parent
+                                    tint: root.base
+                                    tintOpacity: 0.25
+                                    cornerRadius: height / 2
+                                    borderOpacity: 0.35
+                                    sheenStrength: 1.0
                                 }
 
                                 Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.OutExpo } }

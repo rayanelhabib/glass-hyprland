@@ -24,6 +24,11 @@ Item {
     MatugenColors { id: _theme }
     readonly property color surface0: _theme.surface0
 
+    // Cursor-tracking specular glare (fed by hover-only catcher below)
+    property real cursorX: 0.5
+    property real cursorY: 0.5
+    property real sheenGlow: 0.0
+
     // =========================================================================
     // 2. PLAYER DATA STATE & DURATION FORMATTING
     // =========================================================================
@@ -174,7 +179,10 @@ Item {
                 tint: "#ffffff"
                 cornerRadius: root.s(20)
                 bodyOpacity: 0.04
-                cursorSheen: false
+                cursorSheen: true
+                cursorX: root.cursorX
+                cursorY: root.cursorY
+                sheenGlow: root.sheenGlow
             }
 
             // Hairline Refractive Specular Border Outline
@@ -184,6 +192,20 @@ Item {
                 color: "transparent"
                 border.width: 1
                 border.color: Qt.rgba(1.0, 1.0, 1.0, 0.16)
+            }
+
+            // Hover-only glare catcher — sits below the content so it never
+            // steals hover/clicks from artwork or controls, just tracks the cursor.
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+                hoverEnabled: true
+                onPositionChanged: (mouse) => {
+                    root.cursorX = mouse.x / parent.width;
+                    root.cursorY = mouse.y / parent.height;
+                    root.sheenGlow = 1.0;
+                }
+                onExited: root.sheenGlow = 0.0
             }
 
         // =================================================================

@@ -146,12 +146,15 @@ PanelWindow {
         if (widgetCache[name]) return;
         let t = getLayout(name);
         if (!t || !t.comp) return;
-        let obj = t.comp.createObject(preloaderContainer, {
-            "notifModel": masterWindow.notifModel,
-            "liveNotifs": masterWindow.liveNotifs,
-            "visible": false
-        });
-        if (obj) widgetCache[name] = obj;
+        let compObj = Qt.createComponent(t.comp);
+        if (compObj && compObj.status === Component.Ready) {
+            let obj = compObj.createObject(preloaderContainer, {
+                "notifModel": masterWindow.notifModel,
+                "liveNotifs": masterWindow.liveNotifs,
+                "visible": false
+            });
+            if (obj) widgetCache[name] = obj;
+        }
     }
 
     Component.onCompleted: {
