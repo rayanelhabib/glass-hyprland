@@ -8,16 +8,9 @@ import Quickshell.Io
 import "../"
 
 /**
- * MusicPopup.qml — Compact macOS Liquid Glass Media Card
+ * MusicPopup.qml — Modern Liquid Glass Media Player
  *
- * Layout (520x135):
- * ┌────────────────────────────────────────────────────────────────────────┐
- * │ ┌───────────┐  Song Title                                              │
- * │ │           │  Artist Name                                             │
- * │ │ ALBUM ART │  02:07 ────────────────●───────── -01:18    ▌▌▌▌ (EQ)   │
- * │ │ (110x110) │              ⏮       ▌▌       ⏭                      │
- * │ └───────────┘                                                          │
- * └────────────────────────────────────────────────────────────────────────┘
+ * Dark Frosted Liquid Glass Surface with 100% clipped bounds and subtle 10px artwork corners.
  */
 Item {
     id: root
@@ -29,7 +22,6 @@ Item {
     function s(val) { return scaler.s(val); }
 
     MatugenColors { id: _theme }
-    readonly property color base: _theme.base
     readonly property color surface0: _theme.surface0
 
     // =========================================================================
@@ -45,35 +37,28 @@ Item {
         "timeStr": "--:-- / --:--",
         "source": "Offline",
         "playerName": "",
-        "blur": "",
-        "grad": "",
-        "textColor": "#ffffff",
-        "deviceIcon": "󰓃",
-        "deviceName": "Speaker",
         "artUrl": ""
     }
 
     // Calculates remaining track duration formatted as "-MM:SS"
     readonly property string remainingTimeStr: {
         if (!root.musicData || !root.musicData.positionStr || !root.musicData.lengthStr ||
+            root.musicData.status === "Stopped" ||
             (root.musicData.positionStr === "00:00" && root.musicData.lengthStr === "00:00")) return "-00:00";
-        
-        function toSeconds(timeStr) {
-            var parts = timeStr.split(":");
-            return (parts.length === 2) ? parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10) : 0;
-        }
-        
-        var remainingSec = Math.max(0, toSeconds(root.musicData.lengthStr) - toSeconds(root.musicData.positionStr));
-        var mins = Math.floor(remainingSec / 60);
-        var secs = remainingSec % 60;
-        return "-" + (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
+        function toSec(t) { var p = t.split(":"); return (p.length === 2) ? parseInt(p[0], 10) * 60 + parseInt(p[1], 10) : 0; }
+        var totalSec = toSec(root.musicData.lengthStr);
+        var curSec = toSec(root.musicData.positionStr);
+        if (totalSec <= 0 || totalSec < curSec) return "-00:00";
+        var rem = Math.max(0, totalSec - curSec);
+        var m = Math.floor(rem / 60); var sc = rem % 60;
+        return "-" + (m < 10 ? "0" : "") + m + ":" + (sc < 10 ? "0" : "") + sc;
     }
 
     property bool userIsSeeking: false
     property bool userToggledPlay: false
 
     // =========================================================================
-    // 3. LIVE HAPTIC EQUALIZER STATE
+    // 3. LIVE HAPTIC EQUALIZER SPECTRUM
     // =========================================================================
     property real eqBar1: 0.15
     property real eqBar2: 0.25
@@ -148,7 +133,7 @@ Item {
     }
 
     // =========================================================================
-    // 5. MAIN CARD & LIQUID GLASS CONTAINER
+    // 5. MAIN CONTAINER (DARK FROSTED LIQUID GLASS SURFACE)
     // =========================================================================
     Item {
         id: mainWrapper
@@ -157,52 +142,92 @@ Item {
         opacity: root.introMain
         transform: Translate { y: root.s(6) * (1 - root.introMain) }
 
-        // Soft Elevation Drop Shadow
+        // Elevation Drop Shadow
         Rectangle {
             anchors.fill: parent
             anchors.margins: -2
-            radius: root.s(18) + 2
+            radius: root.s(20) + 2
             color: "transparent"
             layer.enabled: true
             layer.effect: MultiEffect {
                 shadowEnabled: true
                 shadowColor: "#000000"
-                shadowOpacity: 0.75
-                shadowBlur: 0.8
+                shadowOpacity: 0.85
+                shadowBlur: 0.90
                 shadowVerticalOffset: 6
             }
         }
 
-        // Main Glass Body Surface (Liquid Glass)
-        LiquidCard {
+        // Clipped Transparent Glass Container (Same pattern as SettingsPopup)
+        Rectangle {
             id: mainCard
             anchors.fill: parent
-            cornerRadius: root.s(18)
-            artUrl: (root.musicData && root.musicData.blur) ? root.musicData.blur : ((root.musicData && root.musicData.artUrl) ? root.musicData.artUrl : "")
-            tint: Qt.rgba(0.06, 0.065, 0.09, 1.0)
-            tintOpacity: 0.25
-            noiseOpacity: 0.15
-            elevation: root.introMain
+            color: "transparent"
+            radius: root.s(20)
+            border.width: 0
+            clip: true
 
-            // =================================================================
-            // 6. CONTENT LAYOUT (ARTWORK - METADATA/CONTROLS - LIVE EQ)
-            // =================================================================
-            RowLayout {
+            // Transparent Liquid Glass Surface
+            LiquidGlass {
+                id: glassSheen
                 anchors.fill: parent
-                anchors.leftMargin: root.s(12)
-                anchors.rightMargin: root.s(12)
-                anchors.topMargin: root.s(12)
-                anchors.bottomMargin: root.s(12)
-                spacing: root.s(14)
-                opacity: root.introContent
+                tint: "#ffffff"
+                cornerRadius: root.s(20)
+                bodyOpacity: 0.04
+                cursorSheen: false
+            }
+
+            // Hairline Refractive Specular Border Outline
+            Rectangle {
+                anchors.fill: parent
+                radius: root.s(20)
+                color: "transparent"
+                border.width: 1
+                border.color: Qt.rgba(1.0, 1.0, 1.0, 0.16)
+            }
+
+        // =================================================================
+        // 6. CONTENT LAYOUT (ARTWORK - METADATA & CONTROLS - LIVE EQ)
+        // =================================================================
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: root.s(16)
+            anchors.rightMargin: root.s(16)
+            anchors.topMargin: root.s(14)
+            anchors.bottomMargin: root.s(14)
+            spacing: root.s(16)
+            opacity: root.introContent
 
                 // -------------------------------------------------------------
-                // A. ALBUM ARTWORK POD (macOS 24px Squircle with Hover Effect)
+                // A. ALBUM ARTWORK POD (Premium Glass Design)
                 // -------------------------------------------------------------
                 Item {
-                    Layout.preferredWidth: root.s(110)
-                    Layout.preferredHeight: root.s(110)
+                    Layout.preferredWidth: root.s(96)
+                    Layout.preferredHeight: root.s(96)
                     Layout.alignment: Qt.AlignVCenter
+
+                    // Soft Luminous Glow Aura Behind Artwork
+                    Image {
+                        id: artGlow
+                        anchors.centerIn: parent
+                        width: parent.width + root.s(24)
+                        height: parent.height + root.s(24)
+                        source: coverArt.source
+                        fillMode: Image.PreserveAspectCrop
+                        smooth: true
+                        visible: false
+                        asynchronous: true
+                    }
+                    MultiEffect {
+                        source: artGlow
+                        anchors.fill: artGlow
+                        blurEnabled: true
+                        blurMax: 48
+                        blur: 1.0
+                        saturation: 0.4
+                        opacity: coverArt.status === Image.Ready ? 0.45 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 500 } }
+                    }
 
                     MouseArea {
                         id: artHover
@@ -210,25 +235,46 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
 
-                        scale: artHover.containsMouse ? 1.05 : 1.0
+                        scale: artHover.containsMouse ? 1.03 : 1.0
                         Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
 
+                        // GPU Mask Item with Smooth 16px Antialiased Corners
+                        Rectangle {
+                            id: artMask
+                            anchors.fill: parent
+                            radius: root.s(16)
+                            color: "#000000"
+                            visible: false
+                            antialiasing: true
+                            layer.enabled: true
+                            layer.smooth: true
+                        }
+
+                        // Clean Artwork Container
                         Rectangle {
                             id: artBox
                             anchors.fill: parent
-                            radius: root.s(24)
-                            color: root.surface0
-                            clip: true
+                            radius: root.s(16)
+                            color: "transparent"
+                            antialiasing: true
 
                             Image {
                                 id: coverArt
                                 anchors.fill: parent
-                                source: root.musicData.artUrl ? "file://" + root.musicData.artUrl : ""
+                                source: root.musicData.artUrl ? (root.musicData.artUrl.indexOf("file://") === 0 ? root.musicData.artUrl : "file://" + root.musicData.artUrl) : ""
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
                                 mipmap: true
+                                antialiasing: true
+                                asynchronous: true
                                 opacity: status === Image.Ready ? 1.0 : 0.0
-                                Behavior on opacity { NumberAnimation { duration: 350 } }
+                                Behavior on opacity { NumberAnimation { duration: 300 } }
+                                layer.enabled: true
+                                layer.smooth: true
+                                layer.effect: MultiEffect {
+                                    maskEnabled: true
+                                    maskSource: artMask
+                                }
                             }
 
                             Text {
@@ -237,18 +283,68 @@ Item {
                                 text: "󰎆"
                                 font.family: "Iosevka Nerd Font"
                                 font.pixelSize: root.s(32)
-                                color: Qt.rgba(1.0, 1.0, 1.0, 0.25)
+                                color: Qt.rgba(1.0, 1.0, 1.0, 0.35)
                             }
                         }
 
-                        // Hover Border Highlight
+                        // Glass Reflection Highlight (Diagonal Sheen)
+                        Rectangle {
+                            id: reflectionMask
+                            anchors.fill: parent
+                            radius: root.s(16)
+                            visible: false
+                            antialiasing: true
+                            layer.enabled: true
+                            layer.smooth: true
+                            color: "#000"
+                        }
                         Rectangle {
                             anchors.fill: parent
-                            radius: root.s(24)
+                            radius: root.s(16)
+                            antialiasing: true
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.18) }
+                                GradientStop { position: 0.35; color: Qt.rgba(1, 1, 1, 0.04) }
+                                GradientStop { position: 1.0; color: "transparent" }
+                            }
+                            opacity: coverArt.status === Image.Ready ? 1.0 : 0.0
+                            layer.enabled: true
+                            layer.smooth: true
+                            layer.effect: MultiEffect {
+                                maskEnabled: true
+                                maskSource: reflectionMask
+                            }
+                        }
+
+                        // Subtle Inner Shadow Vignette (Depth)
+                        Rectangle {
+                            id: innerShadowMask
+                            anchors.fill: parent
+                            radius: root.s(16)
+                            visible: false
+                            antialiasing: true
+                            layer.enabled: true
+                            layer.smooth: true
+                            color: "#000"
+                        }
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: root.s(16)
+                            antialiasing: true
                             color: "transparent"
-                            border.width: artHover.containsMouse ? 1.5 : 0
-                            border.color: Qt.rgba(1.0, 1.0, 1.0, 0.35)
-                            Behavior on border.width { NumberAnimation { duration: 200 } }
+                            border.width: root.s(3)
+                            border.color: Qt.rgba(0, 0, 0, 0.25)
+                            opacity: coverArt.status === Image.Ready ? 1.0 : 0.0
+                            layer.enabled: true
+                            layer.smooth: true
+                            layer.effect: MultiEffect {
+                                maskEnabled: true
+                                maskSource: innerShadowMask
+                                blurEnabled: true
+                                blurMax: 8
+                                blur: 1.0
+                            }
                         }
                     }
                 }
@@ -261,28 +357,30 @@ Item {
                     Layout.fillHeight: true
                     spacing: 0
 
-                    // Track Title
+                    Item { height: root.s(2); Layout.fillWidth: true }
+
+                    // Track Title (Left-aligned, Bold White)
                     Text {
                         Layout.fillWidth: true
-                        horizontalAlignment: Text.AlignHCenter
+                        horizontalAlignment: Text.AlignLeft
                         text: root.musicData.title
                         color: "#FFFFFF"
-                        font.family: "JetBrains Mono"
-                        font.pixelSize: root.s(15)
+                        font.family: "Inter, JetBrains Mono, sans-serif"
+                        font.pixelSize: root.s(18)
                         font.bold: true
                         elide: Text.ElideRight
                         maximumLineCount: 1
                     }
 
-                    // Artist Name
+                    // Artist Name (Left-aligned, Subtext Gray)
                     Text {
                         Layout.fillWidth: true
-                        horizontalAlignment: Text.AlignHCenter
-                        Layout.topMargin: root.s(2)
+                        horizontalAlignment: Text.AlignLeft
+                        Layout.topMargin: root.s(3)
                         text: root.musicData.artist || ""
-                        color: Qt.rgba(1.0, 1.0, 1.0, 0.55)
-                        font.family: "JetBrains Mono"
-                        font.pixelSize: root.s(12)
+                        color: Qt.rgba(1.0, 1.0, 1.0, 0.65)
+                        font.family: "Inter, JetBrains Mono, sans-serif"
+                        font.pixelSize: root.s(13)
                         elide: Text.ElideRight
                         maximumLineCount: 1
                         visible: text !== ""
@@ -290,14 +388,14 @@ Item {
 
                     Item { Layout.fillHeight: true }
 
-                    // Progress Slider Row: 02:07 ────────●────── -01:18
+                    // Progress Slider Row: 00:00 ────────●────── -00:00
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: root.s(8)
 
                         Text {
-                            text: root.musicData.positionStr || "00:00"
-                            color: Qt.rgba(1.0, 1.0, 1.0, 0.65)
+                            text: root.musicData.status === "Stopped" ? "00:00" : (root.musicData.positionStr || "00:00")
+                            color: Qt.rgba(1.0, 1.0, 1.0, 0.70)
                             font.family: "JetBrains Mono"
                             font.pixelSize: root.s(11)
                             font.bold: true
@@ -349,7 +447,7 @@ Item {
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: root.s(1.75)
-                                    color: Qt.rgba(1.0, 1.0, 1.0, 0.20)
+                                    color: Qt.rgba(1.0, 1.0, 1.0, 0.22)
                                 }
 
                                 Rectangle {
@@ -374,14 +472,14 @@ Item {
 
                         Text {
                             text: root.remainingTimeStr
-                            color: Qt.rgba(1.0, 1.0, 1.0, 0.65)
+                            color: Qt.rgba(1.0, 1.0, 1.0, 0.70)
                             font.family: "JetBrains Mono"
                             font.pixelSize: root.s(11)
                             font.bold: true
                         }
                     }
 
-                    Item { height: root.s(4); Layout.fillWidth: true }
+                    Item { height: root.s(2); Layout.fillWidth: true }
 
                     // Playback Controls Row (Previous, Play/Pause, Next)
                     RowLayout {
@@ -402,11 +500,11 @@ Item {
                                 font.pixelSize: root.s(18)
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
-                            scale: pressed ? 0.85 : (containsMouse ? 1.08 : 1.0)
-                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                            scale: pressed ? 0.84 : (containsMouse ? 1.10 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
                         }
 
-                        // Play / Pause Toggle Button
+                        // Play/Pause Button
                         MouseArea {
                             width: root.s(32); height: root.s(32)
                             cursorShape: Qt.PointingHandCursor
@@ -427,8 +525,8 @@ Item {
                                 font.pixelSize: root.s(22)
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
-                            scale: pressed ? 0.85 : (containsMouse ? 1.1 : 1.0)
-                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                            scale: pressed ? 0.84 : (containsMouse ? 1.12 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
                         }
 
                         // Next Track Button
@@ -445,8 +543,8 @@ Item {
                                 font.pixelSize: root.s(18)
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
-                            scale: pressed ? 0.85 : (containsMouse ? 1.08 : 1.0)
-                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                            scale: pressed ? 0.84 : (containsMouse ? 1.10 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
                         }
                     }
                 }
@@ -471,7 +569,7 @@ Item {
                             height: root.s(4) + root.eqBar1 * root.s(32)
                             anchors.bottom: parent.bottom
                             radius: root.s(2)
-                            color: Qt.rgba(1.0, 1.0, 1.0, 0.88)
+                            color: Qt.rgba(1.0, 1.0, 1.0, 0.90)
                             Behavior on height { NumberAnimation { duration: 70; easing.type: Easing.OutQuad } }
                         }
 
@@ -482,7 +580,7 @@ Item {
                             height: root.s(4) + root.eqBar2 * root.s(32)
                             anchors.bottom: parent.bottom
                             radius: root.s(2)
-                            color: Qt.rgba(1.0, 1.0, 1.0, 0.88)
+                            color: Qt.rgba(1.0, 1.0, 1.0, 0.90)
                             Behavior on height { NumberAnimation { duration: 70; easing.type: Easing.OutQuad } }
                         }
 
@@ -493,7 +591,7 @@ Item {
                             height: root.s(4) + root.eqBar3 * root.s(32)
                             anchors.bottom: parent.bottom
                             radius: root.s(2)
-                            color: Qt.rgba(1.0, 1.0, 1.0, 0.88)
+                            color: Qt.rgba(1.0, 1.0, 1.0, 0.90)
                             Behavior on height { NumberAnimation { duration: 70; easing.type: Easing.OutQuad } }
                         }
 
@@ -504,7 +602,7 @@ Item {
                             height: root.s(4) + root.eqBar4 * root.s(32)
                             anchors.bottom: parent.bottom
                             radius: root.s(2)
-                            color: Qt.rgba(1.0, 1.0, 1.0, 0.88)
+                            color: Qt.rgba(1.0, 1.0, 1.0, 0.90)
                             Behavior on height { NumberAnimation { duration: 70; easing.type: Easing.OutQuad } }
                         }
                     }

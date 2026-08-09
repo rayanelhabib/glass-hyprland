@@ -16,10 +16,39 @@ PanelWindow {
     Caching { id: paths }
 
     IpcHandler {
+        id: ipc
         target: "main"
 
         function forceReload(): void {
             Quickshell.reload(true)
+        }
+
+        function debugBounds(): string {
+            let m = masterWindow.musicAnchor;
+            let t = getLayout("music");
+            return JSON.stringify({
+                currentActive: masterWindow.currentActive,
+                animX: masterWindow.animX, animY: masterWindow.animY,
+                animW: masterWindow.animW, animH: masterWindow.animH,
+                anchorW: m ? m.w : -1, anchorX: m ? m.x : -1, anchorY: m ? m.y : -1,
+                tW: t.w, tH: t.h, tRx: t.rx, tRy: t.ry
+            });
+        }
+
+        function debugPopup(): string {
+            let i = widgetStack.currentItem;
+            return JSON.stringify({
+                currentActive: masterWindow.currentActive,
+                isVisible: masterWindow.isVisible,
+                morphBoxW: morphBox ? morphBox.width : -1,
+                morphBoxH: morphBox ? morphBox.height : -1,
+                morphBoxX: morphBox ? morphBox.x : -1,
+                morphBoxY: morphBox ? morphBox.y : -1,
+                morphBoxVisible: morphBox ? morphBox.visible : false,
+                stackCount: widgetStack.count,
+                item: i ? (i.toString() + " w=" + i.width + " h=" + i.height + " x=" + i.x + " y=" + i.y + " o=" + i.opacity + " v=" + i.visible) : "null",
+                widgetCache: Object.keys(widgetCache).join(",")
+            });
         }
 
         function handleCommand(cmd: string, targetWidget: string, arg: string): void {
@@ -100,7 +129,7 @@ PanelWindow {
     MouseArea {
         anchors.fill: parent
         enabled: masterWindow.isVisible
-        onClicked: switchWidget("hidden", "")
+        onClicked: switchWidget("hidden", "");
     }
 
     // =========================================================
@@ -144,6 +173,8 @@ PanelWindow {
 
     property string currentActive: "hidden"
 
+    property var musicAnchor: null
+
     onCurrentActiveChanged: {
         Quickshell.execDetached(["bash", "-c", "echo '" + currentActive + "' > " + paths.runDir + "/current_widget"]);
     }
@@ -163,6 +194,14 @@ PanelWindow {
 
     property real targetW: 1
     property real targetH: 1
+
+    // --- Liquid-glass morph state (music popup) ---
+    // 0 = still a thin glass sliver at the pill, 1 = fully settled popup.
+    property real morphProgress: 1.0
+    property bool musicMorphActive: false
+    property real musicPillRight: 0
+    property real musicPillBottom: 0
+    property real musicPillWidth: 0
 
     property real globalUiScale: 1.0
 
@@ -289,9 +328,11 @@ PanelWindow {
     property string _layoutCacheKey: ""
 
     function getLayout(name) {
-        let key = name + "|" + masterWindow.width + "|" + masterWindow.height + "|" + masterWindow.globalUiScale;
+        let sw = (masterWindow.screen && masterWindow.screen.width > 0) ? masterWindow.screen.width : masterWindow.width;
+        let sh = (masterWindow.screen && masterWindow.screen.height > 0) ? masterWindow.screen.height : masterWindow.height;
+        let key = name + "|" + sw + "|" + sh + "|" + masterWindow.globalUiScale;
         if (_layoutCacheKey === key) return _layoutCache[key];
-        let result = Registry.getLayout(name, 0, 0, masterWindow.width, masterWindow.height, masterWindow.globalUiScale);
+        let result = Registry.getLayout(name, 0, 0, sw, sh, masterWindow.globalUiScale);
         _layoutCache = {};
         _layoutCache[key] = result;
         _layoutCacheKey = key;
@@ -306,6 +347,21 @@ PanelWindow {
 
     function handleNativeScreenChange() {
         if (masterWindow.currentActive === "hidden") return;
+
+        // The morph sequence owns the box geometry while it runs; a resize or
+        // scale change must not clobber the in-flight animation.
+        if (masterWindow.musicMorphActive && masterWindow.currentActive === "music") return;
+
+        if (masterWindow.currentActive === "music") {
+            let m = masterWindow.musicRect();
+            masterWindow.animX = m.x;
+            masterWindow.animY = m.y;
+            masterWindow.animW = m.w;
+            masterWindow.animH = m.h;
+            masterWindow.targetW = m.w;
+            masterWindow.targetH = m.h;
+            return;
+        }
 
         let t = getLayout(masterWindow.currentActive);
         if (!t) return;
@@ -334,6 +390,7 @@ PanelWindow {
     // --- ANIMATED BOUNDING BOX
     // =========================================================
     Item {
+        id: morphBox
         x: masterWindow.animX
         y: masterWindow.animY
         width:  masterWindow.animW
@@ -421,29 +478,109 @@ PanelWindow {
         }
     }
 
+    // Screen-space rect for the music popup: right-aligned under the pill.
+    // Falls back to the registry layout when the pill anchor isn't ready.
+    function musicRect() {
+        let t = getLayout("music");
+        let a = masterWindow.musicAnchor;
+        if (a && a.w > 0) {
+            return { x: a.x + a.w - t.w, y: a.y + a.h, w: t.w, h: t.h };
+        }
+        return { x: t.rx, y: t.ry, w: t.w, h: t.h };
+    }
+
     // =========================================================
     // --- WIDGET SWITCHING
     // =========================================================
     function switchWidget(newWidget, arg) {
         delayedClear.stop();
+        exitHideTimer.stop();
 
         if (newWidget === "hidden") {
-            if (currentActive !== "hidden") {
-                masterWindow.morphDuration = masterWindow.exitDuration;
-                masterWindow.disableMorph = false;
+            if (currentActive === "hidden") return;
 
-                masterWindow.animW = 1;
-                masterWindow.animH = 1;
-                masterWindow.isVisible = false;
+            if (currentActive === "music") {
+                // Sequenced collapse back into the pill: width first (right-pinned),
+                // then height — the glass "recedes" into the returning pill.
+                let a = masterWindow.musicAnchor;
+                let pr = masterWindow.musicPillRight;
+                let pb = masterWindow.musicPillBottom;
+                if (a && a.w > 0) {
+                    pr = a.x + a.w;
+                    pb = a.y + a.h;
+                }
 
-                delayedClear.start();
+                musicOpenSeq.stop();
+                musicOpenProgress.stop();
+
+                masterWindow.disableMorph = true;
+                masterWindow.musicMorphActive = true;
+                masterWindow.currentActive = "hidden"; // the pill begins its return now
+                masterWindow.animY = pb;               // top stays pinned to the pill
+
+                Qt.callLater(() => {
+                    musicCloseSeq.start();
+                    musicCloseProgress.start();
+                });
+                return;
             }
+
+            masterWindow.morphDuration = masterWindow.exitDuration;
+            masterWindow.disableMorph = false;
+
+            masterWindow.animW = 1;
+            masterWindow.animH = 1;
+            masterWindow.animX = 0;
+            masterWindow.animY = 0;
+
+            // Let the morph play, then unmap
+            exitHideTimer.restart();
+            delayedClear.start();
         } else {
             if (currentActive === "hidden" || !masterWindow.isVisible) {
                 masterWindow.morphDuration = 230;
                 masterWindow.disableMorph = false;
 
                 let t = getLayout(newWidget);
+
+                if (newWidget === "music") {
+                    let a = masterWindow.musicAnchor;
+                    if (a && a.w > 0) {
+                        let m = masterWindow.musicRect();
+                        let pr = a.x + a.w;
+                        let pb = a.y + a.h;
+
+                        musicCloseSeq.stop();
+                        musicCloseProgress.stop();
+
+                        masterWindow.disableMorph = true;
+                        masterWindow.musicMorphActive = true;
+                        masterWindow.morphProgress = 0;
+                        masterWindow.musicPillRight = pr;
+                        masterWindow.musicPillBottom = pb;
+                        masterWindow.musicPillWidth = Math.max(2, a.w);
+
+                        // Seed: a pill-wide slab hanging from the pill's bottom edge
+                        masterWindow.animX = pr - masterWindow.musicPillWidth;
+                        masterWindow.animY = pb;
+                        masterWindow.animW = masterWindow.musicPillWidth;
+                        masterWindow.animH = 2;
+                        masterWindow.targetW = m.w;
+                        masterWindow.targetH = m.h;
+
+                        masterWindow.currentActive = "music";
+                        masterWindow.activeArg = arg;
+                        masterWindow.isVisible = true;
+
+                        Qt.callLater(() => {
+                            musicOpenSeq.start();
+                            musicOpenProgress.start();
+                            masterWindow.executeSwitch("music", arg, true);
+                        });
+                        return;
+                    }
+                }
+
                 masterWindow.animX = t.rx;
                 masterWindow.animY = t.ry;
                 masterWindow.animW = t.w;
@@ -459,23 +596,120 @@ PanelWindow {
         }
     }
 
+    // --- Music liquid-glass morph: Stretch → Bloom → Settle ---
+    SequentialAnimation {
+        id: musicOpenSeq
+        running: false
+
+        // PHASE 1 — STRETCH: the pill-wide slab pours down to full height
+        NumberAnimation {
+            target: masterWindow; property: "animH"
+            to: masterWindow.targetH; duration: 170; easing.type: Easing.OutCubic
+        }
+
+        // PHASE 2 — BLOOM: right-pinned width expansion with a soft overshoot
+        ParallelAnimation {
+            NumberAnimation {
+                target: masterWindow; property: "animW"
+                to: masterWindow.targetW; duration: 280
+                easing.type: Easing.bezierCurve(0.34, 1.35, 0.64, 1.0)
+            }
+            NumberAnimation {
+                target: masterWindow; property: "animX"
+                to: masterWindow.musicPillRight - masterWindow.targetW; duration: 280
+                easing.type: Easing.bezierCurve(0.34, 1.35, 0.64, 1.0)
+            }
+        }
+
+        onFinished: masterWindow.finishMusicOpen()
+    }
+
+    SequentialAnimation {
+        id: musicOpenProgress
+        running: false
+        NumberAnimation { target: masterWindow; property: "morphProgress"; to: 0.35; duration: 170; easing.type: Easing.OutCubic }
+        NumberAnimation { target: masterWindow; property: "morphProgress"; to: 0.92; duration: 280; easing.type: Easing.bezierCurve(0.34, 1.35, 0.64, 1.0) }
+        NumberAnimation { target: masterWindow; property: "morphProgress"; to: 1.0; duration: 260; easing.type: Easing.OutBack }
+    }
+
+    // --- Music close: right-pinned width collapse → height collapse into the pill ---
+    SequentialAnimation {
+        id: musicCloseSeq
+        running: false
+
+        ParallelAnimation {
+            NumberAnimation { target: masterWindow; property: "animW"; to: 2; duration: 170; easing.type: Easing.InCubic }
+            NumberAnimation { target: masterWindow; property: "animX"; to: masterWindow.musicPillRight - 2; duration: 170; easing.type: Easing.InCubic }
+        }
+
+        NumberAnimation {
+            target: masterWindow; property: "animH"
+            to: 2; duration: 210; easing.type: Easing.InOutBack
+        }
+
+        onFinished: masterWindow.finishMusicClose()
+    }
+
+    SequentialAnimation {
+        id: musicCloseProgress
+        running: false
+        NumberAnimation { target: masterWindow; property: "morphProgress"; to: 0.4; duration: 170; easing.type: Easing.InCubic }
+        NumberAnimation { target: masterWindow; property: "morphProgress"; to: 0; duration: 220; easing.type: Easing.InOutBack }
+    }
+
+    function finishMusicOpen() {
+        if (!masterWindow.musicMorphActive) return;
+        let m = masterWindow.musicRect();
+        masterWindow.animX = m.x;
+        masterWindow.animY = m.y;
+        masterWindow.animW = m.w;
+        masterWindow.animH = m.h;
+        masterWindow.targetW = m.w;
+        masterWindow.targetH = m.h;
+        masterWindow.musicMorphActive = false;
+        masterWindow.disableMorph = false;
+    }
+
+    function finishMusicClose() {
+        if (!masterWindow.musicMorphActive) return;
+        masterWindow.musicMorphActive = false;
+        masterWindow.disableMorph = false;
+        masterWindow.morphProgress = 0;
+        masterWindow.isVisible = false;
+        widgetStack.clear();
+    }
+
     function executeSwitch(newWidget, arg, immediate) {
         masterWindow.currentActive = newWidget;
         masterWindow.activeArg = arg;
 
         let t = getLayout(newWidget);
-        masterWindow.animX = t.rx;
-        masterWindow.animY = t.ry;
-        masterWindow.animW = t.w;
-        masterWindow.animH = t.h;
-        masterWindow.targetW = t.w;
-        masterWindow.targetH = t.h;
+
+        if (!masterWindow.musicMorphActive) {
+            masterWindow.animX = t.rx;
+            masterWindow.animY = t.ry;
+            masterWindow.animW = t.w;
+            masterWindow.animH = t.h;
+            masterWindow.targetW = t.w;
+            masterWindow.targetH = t.h;
+
+            if (newWidget === "music") {
+                let m = masterWindow.musicRect();
+                masterWindow.animX = m.x;
+                masterWindow.animY = m.y;
+                masterWindow.animW = m.w;
+                masterWindow.animH = m.h;
+                masterWindow.targetW = m.w;
+                masterWindow.targetH = m.h;
+            }
+        }
 
         let props = {};
         props["notifModel"]   = masterWindow.notifModel;
         props["liveNotifs"]   = masterWindow.liveNotifs;
         props["layoutWidth"]  = t.w;
         props["layoutHeight"] = t.h;
+        props["masterWindow"] = masterWindow;
         if (newWidget === "wallpaper") props["widgetArg"] = arg;
 
         let cached = widgetCache[newWidget];
@@ -484,6 +718,7 @@ PanelWindow {
             if (cached.liveNotifs   !== undefined) cached.liveNotifs   = masterWindow.liveNotifs;
             if (cached.layoutWidth  !== undefined) cached.layoutWidth  = t.w;
             if (cached.layoutHeight !== undefined) cached.layoutHeight = t.h;
+            if (cached.masterWindow !== undefined) cached.masterWindow = masterWindow;
             if (newWidget === "wallpaper" && cached.widgetArg !== undefined) cached.widgetArg = arg;
             if (arg !== "" && cached.activeMode !== undefined) cached.activeMode = arg;
 
@@ -502,7 +737,7 @@ PanelWindow {
         }
 
         let currentItem = widgetStack.currentItem;
-        if (currentItem) {
+        if (currentItem && !masterWindow.musicMorphActive) {
             if (currentItem.targetMasterWidth !== undefined) {
                 let dynW = currentItem.targetMasterWidth;
                 masterWindow.animW = dynW;
@@ -525,6 +760,15 @@ PanelWindow {
             masterWindow.currentActive = "hidden";
             widgetStack.clear();
             masterWindow.disableMorph = false;
+        }
+    }
+
+    // Unmaps the master window after the exit morph has played out
+    Timer {
+        id: exitHideTimer
+        interval: 140
+        onTriggered: {
+            masterWindow.isVisible = false;
         }
     }
 }

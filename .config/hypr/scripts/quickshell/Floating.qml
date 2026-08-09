@@ -829,9 +829,9 @@ Variants {
                         width: floatingWidget.s(15) + parent.width
                         height: parent.height
                         radius: floatingWidget.s(15) 
-                        color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.95) 
+                        color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.18) 
                         border.width: 1
-                        border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
+                        border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.10)
 
                         MouseArea {
                             id: sidebarDragArea

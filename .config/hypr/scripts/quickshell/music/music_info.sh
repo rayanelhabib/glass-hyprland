@@ -51,7 +51,6 @@ if [ "$STATUS" = "Playing" ] || [ "$STATUS" = "Paused" ]; then
     # --- 4. ASYNC BACKGROUND LOGIC ---
     if [ -f "$finalArt" ] && [ -s "$finalArt" ]; then
         displayArt="$finalArt"
-        if [ -f "$blurPath" ]; then displayBlur="$blurPath"; fi
         if [ -f "$colorPath" ]; then displayGrad=$(cat "$colorPath"); fi
         if [ -f "$textPath" ]; then displayText=$(cat "$textPath"); fi
     else
@@ -83,7 +82,7 @@ if [ "$STATUS" = "Playing" ] || [ "$STATUS" = "Paused" ]; then
                 if [[ "$isPlaceholder" == "313244" ]] || [[ -z "$isPlaceholder" ]]; then
                     cp "$tempArt" "$tempBlur"
                 else
-                    convert "$tempArt" -blur 0x20 -brightness-contrast -30x-10 "$tempBlur" 2>/dev/null
+                    convert "$tempArt" -blur 0x14 -modulate 110,130 "$tempBlur" 2>/dev/null
                     
                     colors=$(convert "$tempArt" -resize 50x50 -alpha off +dither -quantize RGB -colors 3 -depth 8 -format "%c" histogram:info: 2>/dev/null | grep -E -o '#[0-9A-Fa-f]{6}' | head -n 3 | tr '\n' ' ')
                     read -r -a color_array <<< "$colors"

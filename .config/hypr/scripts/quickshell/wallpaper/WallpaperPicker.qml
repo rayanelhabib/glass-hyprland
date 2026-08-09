@@ -147,17 +147,14 @@ Item {
         
         window.targetWallName = safeFileName;
         let cleanName = window.getCleanName(safeFileName);
-        let reloadScript = Qt.resolvedUrl("matugen_reload.sh").toString();
-        
-        if (reloadScript.startsWith("file://")) {
-            reloadScript = decodeURIComponent(reloadScript.substring(7));
-        }
+        let reloadScript = Quickshell.env("HOME") + "/.config/hypr/scripts/quickshell/wallpaper/matugen_reload.sh";
+        let applyScriptPath = Quickshell.env("HOME") + "/.config/hypr/scripts/theme_apply.sh";
 
         const escapeBash = (str) => String(str).replace(/(["\\$`])/g, '\\$1');
         const randomTransition = window.transitions[Math.floor(Math.random() * window.transitions.length)];
         const escOutputs = escapeBash(outputs);
         
-        const logFile = paths.logDir + "/swww_debug.log";
+        const logFile = paths.logDir + "/awww_debug.log";
         
         if (window.currentFilter === "Search" && window.hasSearched) {
             let alreadyExists = window.isDownloaded(safeFileName);
@@ -171,6 +168,7 @@ Item {
                     export DEST_FILE="${escapeBash(destFile)}"
                     export FINAL_THUMB="${escapeBash(finalThumb)}"
                     export RELOAD_SCRIPT="${escapeBash(reloadScript)}"
+                    export APPLY_SCRIPT="${escapeBash(applyScriptPath)}"
                     export TARGET_MONITORS="${escOutputs}"
                     
                     cp "$DEST_FILE" ${paths.getCacheDir("wallpaper_picker")}/current_wallpaper.png || true
@@ -180,12 +178,12 @@ Item {
                     echo "[$(date +'%H:%M:%S.%3N')] APPLYING CACHED SEARCH: $DEST_FILE TO $TARGET_MONITORS" >> ${logFile}
                     
                     if [ "$TARGET_MONITORS" = "all" ]; then
-                        swww img "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                        awww img "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                     else
-                        swww img -o "$TARGET_MONITORS" "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                        awww img -o "$TARGET_MONITORS" "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                     fi
                     
-                    ( matugen image "$FINAL_THUMB" || true; bash "$RELOAD_SCRIPT" || true ) &
+                    bash "$APPLY_SCRIPT" "$FINAL_THUMB" || true
                 `;
                 Quickshell.execDetached(["bash", "-c", applyScript]);
             } else {
@@ -198,6 +196,7 @@ Item {
                     export FINAL_THUMB="${escapeBash(finalThumb)}"
                     export TEMP_THUMB="${escapeBash(tempThumb)}"
                     export RELOAD_SCRIPT="${escapeBash(reloadScript)}"
+                    export APPLY_SCRIPT="${escapeBash(applyScriptPath)}"
                     export MAP_FILE="${escapeBash(mapFile)}"
                     export TARGET_MONITORS="${escOutputs}"
                     
@@ -222,12 +221,12 @@ Item {
                         echo "[$(date +'%H:%M:%S.%3N')] APPLYING NEW DOWNLOAD: $DEST_FILE TO $TARGET_MONITORS" >> ${logFile}
                         
                         if [ "$TARGET_MONITORS" = "all" ]; then
-                            swww img "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                            awww img "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                         else
-                            swww img -o "$TARGET_MONITORS" "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                            awww img -o "$TARGET_MONITORS" "$DEST_FILE" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                         fi
                         
-                        ( matugen image "$FINAL_THUMB" || true; bash "$RELOAD_SCRIPT" || true ) &
+                        bash "$APPLY_SCRIPT" "$FINAL_THUMB" || true
                     fi
                 `;
                 Quickshell.execDetached(["bash", "-c", downloadScript]);
@@ -241,6 +240,7 @@ Item {
         const escOriginal = escapeBash(originalFile);
         const escThumb = escapeBash(thumbFile);
         const escReload = escapeBash(reloadScript);
+        const escApplyScript = escapeBash(applyScriptPath);
 
         let wallpaperCmd = "";
         
@@ -264,9 +264,9 @@ Item {
                 echo "[$(date +'%H:%M:%S.%3N')] APPLYING LOCAL IMAGE: ${escOriginal} TO ${escOutputs}" >> ${logFile}
                 
                 if [ "${escOutputs}" = "all" ]; then
-                    swww img "${escOriginal}" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                    awww img "${escOriginal}" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                 else
-                    swww img -o "${escOutputs}" "${escOriginal}" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
+                    awww img -o "${escOutputs}" "${escOriginal}" --transition-type ${randomTransition} --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 >> ${logFile} 2>&1 &
                 fi
             `;
         }
@@ -276,7 +276,8 @@ Item {
             pkill mpvpaper || true
             
             ${wallpaperCmd}
-            ( matugen image "${escThumb}" || true; bash "${escReload}" || true ) &
+            echo "[$(date +'%H:%M:%S.%3N')] THEME APPLY START: ${escThumb} -> ${escApplyScript}" >> ${logFile}
+            bash "${escApplyScript}" "${escThumb}" || true
         `;
         Quickshell.execDetached(["bash", "-c", fullScript]);
     }

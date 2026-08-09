@@ -636,9 +636,9 @@ Item {
                 }
 
                 targetBox = -1;
+                }
             }
-        }
-    }    
+    }
 
     ListModel {
         id: langModel
@@ -1038,7 +1038,8 @@ Item {
             from: 0.0
             to: 1.0
             duration: 600
-            easing.type: Easing.OutQuart
+            easing.type: Easing.OutBack
+            easing.overshoot: 1.4
         } 
     }
 
@@ -1117,8 +1118,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 0
-                        color: isActive ? root.peach : root.surface0
-                        border.color: isActive ? root.peach : root.surface1
+                        color: isActive ? Qt.alpha(root.peach, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.peach, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
 
@@ -1195,8 +1196,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 1
-                        color: isActive ? root.blue : root.surface0
-                        border.color: isActive ? root.blue : root.surface1
+                        color: isActive ? Qt.alpha(root.blue, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.blue, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
 
@@ -1263,8 +1264,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 2
-                        color: isActive ? root.sapphire : root.surface0
-                        border.color: isActive ? root.sapphire : root.surface1
+                        color: isActive ? Qt.alpha(root.sapphire, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.sapphire, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
 
@@ -1353,8 +1354,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 3
-                        color: isActive ? root.green : root.surface0
-                        border.color: isActive ? root.green : root.surface1
+                        color: isActive ? Qt.alpha(root.green, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.green, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
 
@@ -1521,8 +1522,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 4
-                        color: isActive ? root.teal : root.surface0
-                        border.color: isActive ? root.teal : root.surface1
+                        color: isActive ? Qt.alpha(root.teal, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.teal, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
 
@@ -1643,8 +1644,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 5
-                        color: isActive ? root.mauve : root.surface0
-                        border.color: isActive ? root.mauve : root.surface1
+                        color: isActive ? Qt.alpha(root.mauve, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.mauve, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
 
@@ -1771,8 +1772,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 6
-                        color: isActive ? root.red : root.surface0
-                        border.color: isActive ? root.red : root.surface1
+                        color: isActive ? Qt.alpha(root.red, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.red, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
 
@@ -1910,8 +1911,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 0
-                        color: isActive ? root.blue : root.surface0
-                        border.color: isActive ? root.blue : root.surface1
+                        color: isActive ? Qt.alpha(root.blue, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.blue, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
                         clip: true
@@ -1959,8 +1960,8 @@ Item {
                                         Rectangle {
                                             Layout.fillWidth: true; Layout.preferredHeight: root.s(30)
                                             radius: root.s(6)
-                                            color: wBox0.isActive ? Qt.alpha(root.base, 0.12) : root.surface0
-                                            border.color: wBox0.isActive ? Qt.alpha(root.base, 0.2) : root.surface1; border.width: 1
+                                            color: wBox0.isActive ? Qt.alpha(root.base, 0.12) : "transparent"
+                                            border.color: wBox0.isActive ? Qt.alpha(root.base, 0.2) : "transparent"; border.width: 1
                                             Behavior on color { ColorAnimation { duration: 220 } }
                                             Behavior on border.color { ColorAnimation { duration: 220 } }
                                             RowLayout { anchors.fill: parent; anchors.margins: root.s(7); spacing: root.s(7)
@@ -2007,8 +2008,8 @@ Item {
                                         Rectangle {
                                             Layout.fillWidth: true; Layout.preferredHeight: root.s(30)
                                             radius: root.s(6)
-                                            color: wBox0.isActive ? Qt.alpha(root.base, 0.12) : root.surface0
-                                            border.color: wBox0.isActive ? Qt.alpha(root.base, 0.2) : root.surface1; border.width: 1
+                                            color: wBox0.isActive ? Qt.alpha(root.base, 0.12) : "transparent"
+                                            border.color: wBox0.isActive ? Qt.alpha(root.base, 0.2) : "transparent"; border.width: 1
                                             Behavior on color { ColorAnimation { duration: 220 } }
                                             Behavior on border.color { ColorAnimation { duration: 220 } }
                                             RowLayout { anchors.fill: parent; anchors.margins: root.s(7); spacing: root.s(7)
@@ -2035,8 +2036,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 1
-                        color: isActive ? root.blue : root.surface0
-                        border.color: isActive ? root.blue : root.surface1
+                        color: isActive ? Qt.alpha(root.blue, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.blue, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
 
@@ -2127,8 +2128,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 2
-                        color: isActive ? root.blue : root.surface0
-                        border.color: isActive ? root.blue : root.surface1
+                        color: isActive ? Qt.alpha(root.blue, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.blue, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
 
@@ -2198,8 +2199,8 @@ Item {
                         radius: root.s(12)
 
                         property bool isActive: root.highlightedBox === 3
-                        color: isActive ? root.blue : root.surface0
-                        border.color: isActive ? root.blue : root.surface1
+                        color: isActive ? Qt.alpha(root.blue, 0.12) : "transparent"
+                        border.color: isActive ? Qt.alpha(root.blue, 0.5) : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutExpo } }
 
@@ -2314,8 +2315,8 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: wsCol.implicitHeight + root.s(32)
                         radius: root.s(12)
-                        color: root.surface0
-                        border.color: root.surface1; border.width: 1
+                        color: "transparent"
+                        border.color: "transparent"; border.width: 1
                         ColumnLayout {
                             id: wsCol
                             anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: root.s(16)
@@ -2373,8 +2374,8 @@ Item {
                             property bool isTypeOpen: false
                             property bool isDispOpen: false
 
-                            color: isJumpHighlighted ? root.surface1 : (isHovered ? root.surface1 : root.surface0)
-                            border.color: isJumpHighlighted ? root.peach : (isHovered ? Qt.alpha(root.peach, 0.5) : root.surface1)
+                            color: isJumpHighlighted ? Qt.alpha(root.peach, 0.15) : (isHovered ? Qt.alpha(root.peach, 0.06) : "transparent")
+                            border.color: isJumpHighlighted ? root.peach : (isHovered ? Qt.alpha(root.peach, 0.5) : "transparent")
                             border.width: isJumpHighlighted ? 2 : 1
 
                             Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
@@ -2829,25 +2830,30 @@ Item {
     Rectangle {
         id: sidebarPanel
         anchors.fill: parent
-        color: Qt.rgba(root.base.r, root.base.g, root.base.b, 0.97)
-        radius: root.s(16)
-        border.width: 1
-        border.color: Qt.rgba(root.surface1.r, root.surface1.g, root.surface1.b, 0.9)
+        color: "transparent"
+        radius: root.s(24)
+        border.width: 0
         clip: true
-
-        Rectangle {
-            anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; width: root.s(16)
-            color: sidebarPanel.color
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: sidebarPanel.border.color }
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: sidebarPanel.border.color }
-            Rectangle { anchors.left: parent.left; width: 1; height: parent.height; color: sidebarPanel.border.color }
-        }
 
         Item {
             anchors.fill: parent
             opacity: introContent
             scale: 0.96 + (0.04 * introContent)
             transform: Translate { y: root.s(40) * (1.0 - introContent) }
+
+            // Surface material: mask-only. The hyprglass plugin paints the
+            // liquid glass (sharp backdrop, edge refraction, specular gloss)
+            // on this layer; this QML background just needs alpha > 0 so the
+            // plugin's mask covers the whole pane. All color/sheen lives in
+            // the plugin preset, not here.
+            LiquidGlass {
+                id: glassSheen
+                anchors.fill: parent
+                tint: "#ffffff"
+                cornerRadius: root.s(24)
+                bodyOpacity: 0.04
+                cursorSheen: false
+            }
 
             ColumnLayout {
                 anchors.fill: parent
@@ -3082,7 +3088,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent; radius: root.s(10)
-                        color: root.surface0; border.color: root.surface1; border.width: 1
+                        color: "transparent"; border.color: "transparent"; border.width: 1
                     }
 
                     Flickable {
@@ -3391,8 +3397,8 @@ Item {
 
                                     Rectangle {
                                         anchors.fill: parent; radius: root.s(10)
-                                        color: isSearchHighlighted ? root.surface1 : (kbResultMa.containsMouse ? root.surface1 : root.surface0)
-                                        border.color: isSearchHighlighted ? root.peach : (kbResultMa.containsMouse ? root.peach : root.surface1)
+                                        color: isSearchHighlighted ? Qt.alpha(root.peach, 0.15) : (kbResultMa.containsMouse ? Qt.alpha(root.peach, 0.06) : "transparent")
+                                        border.color: isSearchHighlighted ? root.peach : (kbResultMa.containsMouse ? Qt.alpha(root.peach, 0.5) : "transparent")
                                         border.width: isSearchHighlighted ? 2 : 1
                                         Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutExpo } }
                                         Behavior on border.color { ColorAnimation { duration: 200; easing.type: Easing.OutExpo } }
@@ -3552,6 +3558,8 @@ Item {
                     }
                 }
             }
+
+
         }
     }
 
@@ -3619,8 +3627,8 @@ Item {
 
                             HoverHandler { id: startupRowHover }
                             property bool isHovered: startupRowHover.hovered || model.isEditing || isJumpHighlighted
-                            color: isJumpHighlighted ? root.surface1 : (isHovered ? root.surface1 : root.surface0)
-                            border.color: isJumpHighlighted ? root.green : (isHovered ? Qt.alpha(root.green, 0.5) : root.surface1)
+                            color: isJumpHighlighted ? Qt.alpha(root.green, 0.15) : (isHovered ? Qt.alpha(root.green, 0.06) : "transparent")
+                            border.color: isJumpHighlighted ? root.green : (isHovered ? Qt.alpha(root.green, 0.5) : "transparent")
                             border.width: isJumpHighlighted ? 2 : 1
 
                             Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }

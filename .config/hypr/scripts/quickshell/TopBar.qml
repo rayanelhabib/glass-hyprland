@@ -7,12 +7,17 @@ import Quickshell.Wayland
 import Quickshell.Services.SystemTray
 
 Variants {
+    id: topBarVariants
     model: Quickshell.screens
+
+    property var musicAnchor: null
 
     delegate: Component {
         PanelWindow {
             id: barWindow
             property bool pendingReload: false
+
+            property var musicAnchor: topBarVariants.musicAnchor
             
 	    Caching { id: paths }
 
@@ -43,6 +48,8 @@ Variants {
             required property var modelData
             screen: modelData
 
+            WlrLayershell.namespace: "qs-topbar"
+
             anchors {
                 top: true
                 left: true
@@ -61,6 +68,7 @@ Variants {
             }
 
             property int barHeight: s(48)
+
 
             height: barHeight
             margins { top: s(8); bottom: 0; left: s(4); right: s(4) }
@@ -586,11 +594,19 @@ Variants {
                     y: (parent.height - barWindow.barHeight) / 2
                     height: barWindow.barHeight
 
-                    color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
-                    radius: barWindow.s(14)
-                    border.width: 1
-                    border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
+                    color: "transparent"
+                    radius: 0
+                    border.width: 0
                     clip: true
+                    
+                    Glass {
+                        anchors.fill: parent
+                        tint: mocha.base
+                        tintOpacity: 0.13
+                        cornerRadius: barWindow.s(14)
+                        borderOpacity: 0.35
+                        sheenStrength: 1.0
+                    }
                     
                     property bool showLayout: false
                     
@@ -774,16 +790,25 @@ Variants {
                 
                 Rectangle {
                     id: workspacesBox
-                    color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
-                    radius: barWindow.s(14); border.width: 1; border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.05)
+                    color: "transparent"
+                    radius: 0; border.width: 0
                     height: barWindow.barHeight
                     y: (parent.height - barWindow.barHeight) / 2
                     clip: true
                     
+                    Glass {
+                        anchors.fill: parent
+                        tint: mocha.base
+                        tintOpacity: 0.13
+                        cornerRadius: barWindow.s(14)
+                        borderOpacity: 0.35
+                        sheenStrength: 1.0
+                    }
+                    
                     width: workspacesModel.count > 0 ? wsLayout.implicitWidth + barWindow.s(20) : 0
                     
                     property real defaultX: leftContent.x + leftContent.width + barWindow.s(4)
-                    property real settingsX: mediaBox.settingsX - width - (width > 0 ? barWindow.s(4) : 0)
+                    property real settingsX: centerBox.settingsX - width - (width > 0 ? barWindow.s(4) : 0)
                                         
                     x: defaultX + (settingsX - defaultX) * barWindow.settingsSlideProgress
 
@@ -906,154 +931,21 @@ Variants {
                     }
                 }
 
-                Rectangle {
-                    id: mediaBox
-                    color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
-                    radius: barWindow.s(14); border.width: 1; border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.05)
-                    y: (parent.height - barWindow.barHeight) / 2
-                    height: barWindow.barHeight
-                    clip: true 
-                    
-                    width: barWindow.isMediaActive ? innerMediaLayout.implicitWidth + barWindow.s(24) : 0
-                    Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
-
-                    property real defaultX: workspacesBox.defaultX + workspacesBox.width + (workspacesBox.width > 0 ? barWindow.s(4) : 0)
-                    property real settingsX: centerBox.settingsX - width - (width > 0 ? barWindow.s(4) : 0)
-
-                    x: defaultX + (settingsX - defaultX) * barWindow.settingsSlideProgress
-
-                    visible: width > 0 || opacity > 0
-                    opacity: barWindow.isMediaActive ? 1.0 : 0.0
-                    Behavior on opacity { NumberAnimation { duration: 400 } }
-                    
-                    Item {
-                        id: mediaLayoutContainer
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.leftMargin: barWindow.s(12)
-                        height: parent.height
-                        width: innerMediaLayout.implicitWidth
-                        
-                        opacity: barWindow.isMediaActive ? 1.0 : 0.0
-                        transform: Translate { 
-                            x: barWindow.isMediaActive ? 0 : barWindow.s(-20) 
-                            Behavior on x { NumberAnimation { duration: 700; easing.type: Easing.OutQuint } }
-                        }
-                        Behavior on opacity { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
-
-                        Row {
-                            id: innerMediaLayout
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: barWindow.width < 1920 ? barWindow.s(8) : barWindow.s(16)
-                            
-                            MouseArea {
-                                id: mediaInfoMouse
-                                width: infoLayout.width
-                                height: innerMediaLayout.height
-                                hoverEnabled: true
-                                onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh toggle music"])
-                                
-                                Row {
-                                    id: infoLayout
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spacing: barWindow.s(10)
-                                    
-                                    scale: mediaInfoMouse.containsMouse ? 1.02 : 1.0
-                                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
-
-                                    Rectangle {
-                                        width: barWindow.s(32); height: barWindow.s(32); radius: barWindow.s(8); color: mocha.surface1
-                                        border.width: barWindow.musicData.status === "Playing" ? 1 : 0
-                                        border.color: mocha.mauve
-                                        clip: true
-                                        Image { 
-                                            anchors.fill: parent; 
-                                            source: barWindow.displayArtUrl || ""; 
-                                            fillMode: Image.PreserveAspectCrop 
-                                        }
-                                        
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            color: Qt.rgba(mocha.mauve.r, mocha.mauve.g, mocha.mauve.b, 0.2)
-                                        }
-                                    }
-                                    Column {
-                                        spacing: -2
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        property real maxColWidth: barWindow.width < 1920 ? barWindow.s(120) : barWindow.s(180)
-                                        width: maxColWidth 
-                                        
-                                        Text { 
-                                            text: barWindow.displayTitle; 
-                                            font.family: "JetBrains Mono"; 
-                                            font.weight: Font.Black; 
-                                            font.pixelSize: barWindow.s(13); 
-                                            color: mocha.text;
-                                            width: parent.width
-                                            elide: Text.ElideRight; 
-                                        }
-                                        Text { 
-                                            text: barWindow.displayTime; 
-                                            font.family: "JetBrains Mono"; 
-                                            font.weight: Font.Black; 
-                                            font.pixelSize: barWindow.s(10); 
-                                            color: mocha.subtext0;
-                                            width: parent.width
-                                            elide: Text.ElideRight;
-                                        }
-                                    }
-                                }
-                            }
-
-                            Row {
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: barWindow.width < 1920 ? barWindow.s(4) : barWindow.s(8)
-                                Item { 
-                                    width: barWindow.s(24); height: barWindow.s(24); 
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    Text { 
-                                        anchors.centerIn: parent; text: "󰒮"; font.family: "Iosevka Nerd Font"; font.pixelSize: barWindow.s(26); 
-                                        color: prevMouse.containsMouse ? mocha.text : mocha.overlay2; 
-                                        Behavior on color { ColorAnimation { duration: 150 } }
-                                        scale: prevMouse.containsMouse ? 1.1 : 1.0
-                                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                                    }
-                                    MouseArea { id: prevMouse; hoverEnabled: true; anchors.fill: parent; onClicked: { Quickshell.execDetached(["playerctl", "previous"]); musicForceRefresh.running = true; } } 
-                                }
-                                Item { 
-                                    width: barWindow.s(28); height: barWindow.s(28); 
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    Text { 
-                                        anchors.centerIn: parent; text: barWindow.musicData.status === "Playing" ? "󰏤" : "󰐊"; font.family: "Iosevka Nerd Font"; font.pixelSize: barWindow.s(30); 
-                                        color: playMouse.containsMouse ? mocha.green : mocha.text; 
-                                        Behavior on color { ColorAnimation { duration: 150 } }
-                                        scale: playMouse.containsMouse ? 1.15 : 1.0
-                                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                                    }
-                                    MouseArea { id: playMouse; hoverEnabled: true; anchors.fill: parent; onClicked: { Quickshell.execDetached(["playerctl", "play-pause"]); musicForceRefresh.running = true; } } 
-                                }
-                                Item { 
-                                    width: barWindow.s(24); height: barWindow.s(24); 
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    Text { 
-                                        anchors.centerIn: parent; text: "󰒭"; font.family: "Iosevka Nerd Font"; font.pixelSize: barWindow.s(26); 
-                                        color: nextMouse.containsMouse ? mocha.text : mocha.overlay2; 
-                                        Behavior on color { ColorAnimation { duration: 150 } }
-                                        scale: nextMouse.containsMouse ? 1.1 : 1.0
-                                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                                    }
-                                    MouseArea { id: nextMouse; hoverEnabled: true; anchors.fill: parent; onClicked: { Quickshell.execDetached(["playerctl", "next"]); musicForceRefresh.running = true; } } 
-                                }
-                            }
-                        }
-                    }
-                }
 
                 Rectangle {
                     id: centerBox
                     property bool isHovered: centerMouse.containsMouse
-                    color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.95) : Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
-                    radius: barWindow.s(14); border.width: 1; border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, isHovered ? 0.15 : 0.05)
+                    color: "transparent"
+                    radius: 0; border.width: 0
+                    
+                    Glass {
+                        anchors.fill: parent
+                        tint: mocha.base
+                        tintOpacity: 0.13
+                        cornerRadius: barWindow.s(14)
+                        borderOpacity: 0.35
+                        sheenStrength: 1.0
+                    }
                     
                     y: (parent.height - barWindow.barHeight) / 2
                     height: barWindow.barHeight
@@ -1062,9 +954,8 @@ Variants {
                     Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutExpo } }
                     
                     property real pureCenter: (parent.width - width) / 2
-                    property real minCenterDefaultX: mediaBox.defaultX + mediaBox.width + (mediaBox.width > 0 ? barWindow.s(4) : 0)
                     property real settingsX: barWindow.width - rightContent.width - width - barWindow.s(4)
-                    property real defaultX: Math.max(minCenterDefaultX, pureCenter)
+                    property real defaultX: pureCenter
                     
                     x: defaultX + (settingsX - defaultX) * barWindow.settingsSlideProgress
                     
@@ -1149,12 +1040,20 @@ Variants {
 
                     Rectangle {
                         height: barWindow.barHeight
-                        radius: barWindow.s(14)
-                        border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
-                        border.width: 1
-                        color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
+                        radius: 0
+                        border.width: 0
+                        color: "transparent"
                         
-                        property real targetWidth: trayRepeater.count > 0 ? trayLayout.width + barWindow.s(24) : 0
+                    Glass {
+                        anchors.fill: parent
+                        tint: mocha.base
+                        tintOpacity: 0.13
+                        cornerRadius: barWindow.s(14)
+                        borderOpacity: 0.35
+                        sheenStrength: 1.0
+                    }
+                    
+                    property real targetWidth: trayRepeater.count > 0 ? trayLayout.width + barWindow.s(24) : 0
                         width: targetWidth
                         Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutExpo } }
                         
@@ -1244,11 +1143,19 @@ Variants {
 
                     Rectangle {
                         height: barWindow.barHeight
-                        radius: barWindow.s(14)
-                        border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08)
-                        border.width: 1
-                        color: Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
+                        radius: 0
+                        border.width: 0
+                        color: "transparent"
                         clip: true
+                        
+                        Glass {
+                            anchors.fill: parent
+                            tint: mocha.base
+                            tintOpacity: 0.13
+                            cornerRadius: barWindow.s(14)
+                            borderOpacity: 0.35
+                            sheenStrength: 1.0
+                        }
                         
                         width: sysLayout.implicitWidth + barWindow.s(20)
 
@@ -1260,10 +1167,171 @@ Variants {
                             property int pillHeight: barWindow.s(34)
 
                             Rectangle {
-                                property bool isHovered: kbMouse.containsMouse
-                                color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4)
-                                radius: barWindow.s(10); height: sysLayout.pillHeight;
+                                id: musicPill
+                                property bool isHovered: musicPillMouse.containsMouse
+                                color: "transparent"
+                                radius: 0; height: sysLayout.pillHeight;
+                                border.width: 0
                                 clip: true
+                                
+                                Glass {
+                                    anchors.fill: parent
+                                    tint: mocha.base
+                                    tintOpacity: 0.13
+                                    cornerRadius: barWindow.s(10)
+                                    borderOpacity: 0.30
+                                    sheenStrength: 1.0
+                                }
+                                
+                                property real targetWidth: musicLayoutRow.implicitWidth + barWindow.s(24)
+                                width: targetWidth
+                                Behavior on width { NumberAnimation { duration: 500; easing.type: Easing.OutQuint } }
+                                
+                                // --- Liquid-glass handoff: the pill "pours" into the popup ---
+                                property bool musicOpen: barWindow.activeWidget === "music"
+                                property real handoffStretch: musicOpen ? 1 : 0
+
+                                scale: isHovered ? 1.05 : 1.0
+                                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                                Behavior on color { ColorAnimation { duration: 200 } }
+
+                                property bool initAnimTrigger: false
+                                Timer { running: rightContent.showLayout && !parent.initAnimTrigger; interval: 0; onTriggered: parent.initAnimTrigger = true }
+                                opacity: (initAnimTrigger ? 1 : 0) * (1 - handoffStretch)
+                                Behavior on opacity { NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
+
+                                transform: [
+                                    Scale {
+                                        xScale: 1 + 0.10 * musicPill.handoffStretch
+                                        yScale: 1 + 0.28 * musicPill.handoffStretch
+                                        origin.x: musicPill.width / 2
+                                        origin.y: 0
+                                        Behavior on xScale { NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
+                                        Behavior on yScale { NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
+                                    },
+                                    Translate {
+                                        y: musicPill.initAnimTrigger ? 0 : barWindow.s(15)
+                                        Behavior on y { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
+                                    }
+                                ]
+
+                                Row {
+                                    id: musicLayoutRow
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: barWindow.s(10)
+                                    spacing: barWindow.s(8)
+
+                                    // Album-art thumbnail (when a track is active)
+                                    Item {
+                                        id: pillArtWrap
+                                        width: barWindow.isMediaActive ? barWindow.s(22) : 0
+                                        height: barWindow.s(22)
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: barWindow.s(7)
+                                            color: mocha.surface1
+
+                                            Image {
+                                                anchors.fill: parent
+                                                source: barWindow.displayArtUrl ? "file://" + barWindow.displayArtUrl : ""
+                                                fillMode: Image.PreserveAspectCrop
+                                                visible: status === Image.Ready
+                                            }
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                visible: !barWindow.displayArtUrl
+                                                text: "󰎆"
+                                                font.family: "Iosevka Nerd Font"; font.pixelSize: barWindow.s(12)
+                                                color: mocha.overlay2
+                                            }
+
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: barWindow.s(7)
+                                                color: Qt.rgba(mocha.mauve.r, mocha.mauve.g, mocha.mauve.b, 0.18)
+                                            }
+
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: barWindow.s(7)
+                                                color: "transparent"
+                                                border.width: 1
+                                                border.color: barWindow.musicData.status === "Playing" ? Qt.rgba(mocha.mauve.r, mocha.mauve.g, mocha.mauve.b, 0.8) : Qt.rgba(1, 1, 1, 0.18)
+                                                Behavior on border.color { ColorAnimation { duration: 200 } }
+                                            }
+                                        }
+                                    }
+
+                                    Text {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        visible: !barWindow.isMediaActive
+                                        text: "󰎆"
+                                        font.family: "Iosevka Nerd Font"; font.pixelSize: barWindow.s(16)
+                                        color: musicPillMouse.containsMouse ? mocha.text : mocha.overlay2
+                                        Behavior on color { ColorAnimation { duration: 200 } }
+                                    }
+                                    Text {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: barWindow.isMediaActive ? barWindow.displayTitle : "Music"
+                                        font.family: "JetBrains Mono"; font.pixelSize: barWindow.s(13); font.weight: Font.Black
+                                        color: musicPillMouse.containsMouse ? mocha.text : mocha.subtext0
+                                        width: Math.min(implicitWidth, barWindow.s(105)); elide: Text.ElideRight
+                                    }
+
+                                    Item {
+                                        visible: barWindow.musicData.status === "Playing"
+                                        width: barWindow.s(6); height: barWindow.s(6)
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: width / 2
+                                            color: mocha.mauve
+                                            scale: 1.0
+                                            SequentialAnimation on scale {
+                                                running: barWindow.musicData.status === "Playing"
+                                                loops: Animation.Infinite
+                                                NumberAnimation { to: 1.35; duration: 650; easing.type: Easing.InOutQuad }
+                                                NumberAnimation { to: 1.0; duration: 650; easing.type: Easing.InOutQuad }
+                                            }
+                                        }
+                                    }
+                                }
+                                MouseArea { id: musicPillMouse; anchors.fill: parent; hoverEnabled: true; onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh toggle music"]) }
+                            }
+
+                            // Keep the shared musicAnchor in sync with the pill's screen rect
+                            Timer {
+                                interval: 200
+                                repeat: true
+                                running: barWindow.musicAnchor !== null
+                                onTriggered: {
+                                    let a = barWindow.musicAnchor;
+                                    if (!a) return;
+                                    let g = musicPill.mapToGlobal(0, 0);
+                                    a.x = g.x; a.y = g.y; a.w = musicPill.width; a.h = musicPill.height;
+                                }
+                            }
+
+                            Rectangle {
+                                property bool isHovered: kbMouse.containsMouse
+                                color: "transparent"
+                                radius: 0; height: sysLayout.pillHeight;
+                                border.width: 0
+                                clip: true
+                                
+                                Glass {
+                                    anchors.fill: parent
+                                    tint: mocha.base
+                                    tintOpacity: 0.13
+                                    cornerRadius: barWindow.s(10)
+                                    borderOpacity: 0.30
+                                    sheenStrength: 1.0
+                                }
                                 
                                 property real targetWidth: kbLayoutRow.implicitWidth + barWindow.s(24)
                                 width: targetWidth
@@ -1294,9 +1362,19 @@ Variants {
                             Rectangle {
                                 id: wifiPill
                                 property bool isHovered: wifiMouse.containsMouse
-                                radius: barWindow.s(10); height: sysLayout.pillHeight; 
-                                color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4)
+                                radius: 0; height: sysLayout.pillHeight
+                                border.width: 0
                                 clip: true
+                                color: "transparent"
+                                
+                                Glass {
+                                    anchors.fill: parent
+                                    tint: mocha.base
+                                    tintOpacity: 0.13
+                                    cornerRadius: barWindow.s(10)
+                                    borderOpacity: 0.30
+                                    sheenStrength: 1.0
+                                }
                                 
                                 Rectangle {
                                     anchors.fill: parent
@@ -1352,9 +1430,19 @@ Variants {
                             Rectangle {
                                 id: btPill
                                 property bool isHovered: btMouse.containsMouse
-                                radius: barWindow.s(10); height: sysLayout.pillHeight
+                                radius: 0; height: sysLayout.pillHeight
+                                border.width: 0
                                 clip: true
-                                color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4)
+                                color: "transparent"
+                                
+                                Glass {
+                                    anchors.fill: parent
+                                    tint: mocha.base
+                                    tintOpacity: 0.13
+                                    cornerRadius: barWindow.s(10)
+                                    borderOpacity: 0.30
+                                    sheenStrength: 1.0
+                                }
                                 
                                 Rectangle {
                                     anchors.fill: parent
@@ -1405,9 +1493,19 @@ Variants {
 
                             Rectangle {
                                 property bool isHovered: volMouse.containsMouse
-                                color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4)
-                                radius: barWindow.s(10); height: sysLayout.pillHeight;
+                                color: "transparent"
+                                radius: 0; height: sysLayout.pillHeight;
+                                border.width: 0
                                 clip: true
+                                
+                                Glass {
+                                    anchors.fill: parent
+                                    tint: mocha.base
+                                    tintOpacity: 0.13
+                                    cornerRadius: barWindow.s(10)
+                                    borderOpacity: 0.30
+                                    sheenStrength: 1.0
+                                }
 
                                 Rectangle {
                                     anchors.fill: parent
@@ -1458,9 +1556,19 @@ Variants {
 
                             Rectangle {
                                 property bool isHovered: batMouse.containsMouse
-                                color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.6) : Qt.rgba(mocha.surface0.r, mocha.surface0.g, mocha.surface0.b, 0.4); 
-                                radius: barWindow.s(10); height: sysLayout.pillHeight;
+                                color: "transparent"
+                                radius: 0; height: sysLayout.pillHeight;
+                                border.width: 0
                                 clip: true
+                                
+                                Glass {
+                                    anchors.fill: parent
+                                    tint: mocha.base
+                                    tintOpacity: 0.13
+                                    cornerRadius: barWindow.s(10)
+                                    borderOpacity: 0.30
+                                    sheenStrength: 1.0
+                                }
 
                                 Rectangle {
                                     anchors.fill: parent
@@ -1511,14 +1619,23 @@ Variants {
                             }                       
                  }
             }
-            Rectangle {
+                    Rectangle {
                         id: recButton
                         property bool isHovered: recMouse.containsMouse
                         
-                        color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.95) : Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
-                        radius: barWindow.s(14)
-                        border.width: 1
-                        border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, isHovered ? 0.15 : 0.05)
+                        color: "transparent"
+                        radius: 0
+                        border.width: 0
+                        
+                        Glass {
+                            anchors.fill: parent
+                            tint: mocha.base
+                            tintOpacity: 0.13
+                            cornerRadius: barWindow.s(14)
+                            borderOpacity: 0.35
+                            sheenStrength: 1.0
+                        }
+
 
                         property real targetWidth: barWindow.isRecording ? barWindow.barHeight : 0
                         width: targetWidth

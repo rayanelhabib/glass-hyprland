@@ -185,8 +185,8 @@ PanelWindow {
                     id: popupCard
                     anchors.fill: parent
                     radius: popupWindow.layoutConfig.radius
-                    color: _theme.base
-                    border.color: _theme.surface1
+                    color: Qt.rgba(_theme.base.r, _theme.base.g, _theme.base.b, 0.16)
+                    border.color: Qt.rgba(_theme.surface1.r, _theme.surface1.g, _theme.surface1.b, 0.25)
                     border.width: 1
                     clip: true
 

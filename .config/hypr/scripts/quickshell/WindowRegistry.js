@@ -50,8 +50,7 @@ function getLayout(name, mx, my, mw, mh, userScale) {
 	"updater": { w: s(950, scale), h: s(850, scale), rx: Math.floor((mw/2)-(s(950, scale)/2)), ry: Math.floor((mh/2)-(s(850, scale)/2)), comp: "updater/UpdaterPopup.qml" },
         "wallpaper": { w: mw, h: s(650, scale), rx: 0, ry: Math.floor((mh/2)-(s(650, scale)/2)), comp: "wallpaper/WallpaperPicker.qml" },
         
-        // --- Top Left Edge ---
-        "music":     { w: s(700, scale), h: s(650, scale), rx: s(5, scale), ry: s(60, scale), comp: "music/MusicPopup.qml" },
+        "music":     { w: s(520, scale), h: s(150, scale), rx: s(5, scale), ry: s(60, scale), comp: "music/MusicPopup.qml" },
 
         "movies": {
             w: s(1370, scale),
@@ -62,7 +61,7 @@ function getLayout(name, mx, my, mw, mh, userScale) {
         },
         
         // --- Screen Spanning Panels ---
-        "settings":  { w: s(450, scale), h: mh - s(0, scale), rx: s(0, scale), ry: s(0, scale), comp: "settings/SettingsPopup.qml" },
+        "settings":  { w: s(520, scale), h: mh - s(150, scale), rx: Math.floor((mw/2)-(s(520, scale)/2)), ry: s(64, scale), comp: "settings/SettingsPopup.qml" },
         
         // --- Utility ---
         "hidden":    { w: 1, h: 1, rx: -5000 - mx, ry: -5000 - my, comp: "" } 

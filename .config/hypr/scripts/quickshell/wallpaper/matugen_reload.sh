@@ -100,3 +100,9 @@ if command -v gsettings &> /dev/null; then
     gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 fi
 
+# Cursor follows the theme (light/dark variant matching the wallpaper)
+bash "$HOME/.config/hypr/scripts/cursor_reload.sh"
+
+# Apply the Matugen-generated Hyprland colors (borders, etc.)
+hyprctl reload
+
