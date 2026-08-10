@@ -311,10 +311,6 @@ Variants {
             }
 
             mask: Region {
-                Region { x: 0; y: 0; width: 1; height: floatingWidget.height }
-                Region { x: floatingWidget.width - 1; y: 0; width: 1; height: floatingWidget.height }
-                Region { x: 0; y: floatingWidget.height - 1; width: floatingWidget.width; height: 1 }
-
                 Region {
                     x: floatingWidget.isPeekVisible ? peekBar.x - floatingWidget.s(15) : 0
                     y: floatingWidget.isPeekVisible ? peekBar.y - floatingWidget.s(15) : 0
