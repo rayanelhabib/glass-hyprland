@@ -67,6 +67,12 @@ hl.config({
         no_donation_nag = true
     },
 
+    -- Require a small mouse travel before a SUPER+drag "picks up" a window,
+    -- so a plain hold/click doesn't float-then-retile the window (flicker).
+    binds = {
+        drag_threshold = 10
+    },
+
     animations = {
         enabled = true
     }

@@ -5,3 +5,4 @@ exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CUR
 exec-once = systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE QT_QPA_PLATFORM
 exec-once = hyprctl seterror disable
 exec-once = ~/.config/hypr/scripts/window_clamp.sh
+exec-once = ~/.config/hypr/scripts/floating_drag.sh

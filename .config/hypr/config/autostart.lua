@@ -8,6 +8,8 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprctl seterror disable")
     -- Floating-window clamp daemon (keeps floaters off the top bar / screen edges)
     hl.exec_cmd("~/.config/hypr/scripts/window_clamp.sh")
+    -- "Drop and stay" daemon (re-floats windows where you dropped them after a drag)
+    hl.exec_cmd("~/.config/hypr/scripts/floating_drag.sh")
 
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
     hl.exec_cmd("awww-daemon")
