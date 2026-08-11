@@ -21,12 +21,11 @@ if hl.plugin.hyprglass then
             namespaces = "qs-master, qs-topbar, qs-floating-overlay, qs-popups",
             namespace_presets = "qs-master:qsglass, qs-topbar:qsglassbar, qs-floating-overlay:qsglass, qs-popups:qsglass",
             namespace_mask_thresholds = "qs-master=0.01",
-            -- LIVE backdrop: re-sample + re-blur every frame so moving content
-            -- (video, window drags, animated wallpaper) shows through the glass
-            -- in real time. The alternative (0) caches a scene-generation
-            -- snapshot and only refreshes on discrete events (focus/ws/layer
-            -- moves) — cheaper but stale. Any non-zero value = live.
-            live_refresh = 1
+            -- Backdrop is cached and refreshed on discrete events (focus/ws/
+            -- layer moves). Keep it 0: a live per-frame re-sample (1) makes
+            -- every glass surface re-blur the whole background EVERY frame,
+            -- which tanks GPU and makes dragging/holding windows stutter.
+            live_refresh = 0
         }
     })
 
