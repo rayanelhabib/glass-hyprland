@@ -47,8 +47,17 @@ AREA_H=$((MON_H - RES_TOP - RES_BOT - GAP * 2))
 WINDOW_JSON=$(hyprctl activewindow -j 2>/dev/null)
 IS_FLOATING=$(echo "$WINDOW_JSON" | jq '.floating // false')
 
+# A fullscreen/maximized window can't be moved or resized — unset it first so
+# the snap applies instead of silently doing nothing.
+FS_STATE=$(echo "$WINDOW_JSON" | jq '.fullscreen // 0')
+if [[ "$FS_STATE" != "0" ]]; then
+    hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "fullscreen", action = "unset" })' 2>/dev/null
+    hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "unset" })' 2>/dev/null
+    sleep 0.05
+fi
+
 if [[ "$IS_FLOATING" != "true" && "$ZONE" != "maximize" ]]; then
-    hyprctl dispatch togglefloating 2>/dev/null
+    hyprctl dispatch 'hl.dsp.window.float({ action = "toggle" })' 2>/dev/null
     sleep 0.05
 fi
 
@@ -121,7 +130,7 @@ case "$ZONE" in
         H=$AREA_H
         ;;
     maximize)
-        hyprctl dispatch fullscreen 1 2>/dev/null
+        hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "set" })' 2>/dev/null
         exit 0
         ;;
     center)
@@ -136,5 +145,7 @@ case "$ZONE" in
         ;;
 esac
 
-# Apply the snap
-hyprctl --batch "dispatch movewindowpixel exact $X $Y,activewindow; dispatch resizewindowpixel exact $W $H,activewindow" 2>/dev/null
+# Apply the snap — resize FIRST (resize keeps the window centered, which
+# shifts x/y), then move to the exact target position so the final result
+# lands precisely on the zone.
+hyprctl --batch "dispatch hl.dsp.window.resize({ x = $W, y = $H }); dispatch hl.dsp.window.move({ x = $X, y = $Y })" 2>/dev/null

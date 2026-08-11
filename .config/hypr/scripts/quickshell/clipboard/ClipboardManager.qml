@@ -353,7 +353,7 @@ Item {
                         filterClips(text);
                     }
 
-                    Keys.onTabPressed: {
+                    Keys.onTabPressed: (event) => {
                         if (clipModel.count > 0) {
                             window.previewMode = !window.previewMode;
                             if (window.previewMode) {
@@ -363,7 +363,7 @@ Item {
                         event.accepted = true;
                     }
 
-                    Keys.onRightPressed: {
+                    Keys.onRightPressed: (event) => {
                         window.previewMode = false;
                         window.navDuration = 250; 
                         window.pendingIndex = -1;
@@ -378,7 +378,7 @@ Item {
                         event.accepted = true;
                     }
                     
-                    Keys.onLeftPressed: {
+                    Keys.onLeftPressed: (event) => {
                         window.previewMode = false;
                         window.navDuration = 250;
                         window.pendingIndex = -1;
@@ -387,7 +387,7 @@ Item {
                         event.accepted = true;
                     }
                     
-                    Keys.onDownPressed: {
+                    Keys.onDownPressed: (event) => {
                         if (window.previewMode && textPreviewFlickable.visible) {
                             textPreviewFlickable.contentY = Math.min(textPreviewFlickable.contentY + window.s(60), Math.max(0, textPreviewFlickable.contentHeight - textPreviewFlickable.height));
                         } else {
@@ -408,7 +408,7 @@ Item {
                         event.accepted = true;
                     }
                     
-                    Keys.onUpPressed: {
+                    Keys.onUpPressed: (event) => {
                         if (window.previewMode && textPreviewFlickable.visible) {
                             textPreviewFlickable.contentY = Math.max(textPreviewFlickable.contentY - window.s(60), 0);
                         } else {
@@ -421,14 +421,14 @@ Item {
                         event.accepted = true;
                     }
                     
-                    Keys.onReturnPressed: {
+                    Keys.onReturnPressed: (event) => {
                         if (clipList.currentIndex >= 0 && clipList.currentIndex < clipModel.count) {
                             copyToClipboard(clipModel.get(clipList.currentIndex).id);
                         }
                         event.accepted = true;
                     }
                     
-                    Keys.onEscapePressed: {
+                    Keys.onEscapePressed: (event) => {
                         if (window.previewMode) {
                             window.previewMode = false;
                         } else {

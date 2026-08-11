@@ -223,7 +223,7 @@ Item {
         if (tab3Loaded) Config.displayPoller.running = true;
     }
 
-    Keys.onEscapePressed: {
+    Keys.onEscapePressed: (event) => {
         if (root.isSearchMode) {
             root.isSearchMode = false;
             root.globalSearchQuery = "";
@@ -1060,7 +1060,7 @@ Item {
         }
         ScriptAction { 
             script: {
-                Quickshell.execDetached(["hyprctl", "dispatch", "submap", "reset"]);
+                Quickshell.execDetached(["hyprctl", "--batch", "dispatch hl.dsp.submap('reset')"]);
                 Quickshell.execDetached(["bash", Quickshell.env("HOME") + "/.config/hypr/scripts/qs_manager.sh", "close"]);
             } 
         }    
@@ -2520,7 +2520,35 @@ Item {
                                         hoverEnabled: true; cursorShape: Qt.PointingHandCursor; acceptedButtons: Qt.LeftButton; enabled: !model.isEditing
                                         onClicked: {
                                             if (model.dispatcher.startsWith("exec")) { Quickshell.execDetached(["bash", "-c", model.command]); }
-                                            else { Quickshell.execDetached(["hyprctl", "dispatch", model.dispatcher, model.command]); }
+                                            else { 
+                                                let cmd = "";
+                                                if (model.dispatcher === "killactive") cmd = "hl.dsp.window.close()";
+                                                else if (model.dispatcher === "togglefloating") cmd = "hl.dsp.window.float({ action = 'toggle' })";
+                                                else if (model.dispatcher === "movefocus" || model.dispatcher === "movewindow") {
+                                                    let dir = {"l":"left","r":"right","u":"up","d":"down"}[model.command] || model.command;
+                                                    let act = model.dispatcher === "movewindow" ? "window.move" : "focus";
+                                                    if (model.dispatcher === "movewindow" && !dir) cmd = "hl.dsp.window.drag()";
+                                                    else cmd = "hl.dsp." + act + "({ direction = '" + dir + "' })";
+                                                }
+                                                else if (model.dispatcher === "resizeactive") {
+                                                    let parts = model.command.trim().split(" ");
+                                                    if (parts.length >= 2) cmd = "hl.dsp.window.resize({ x = " + parts[0] + ", y = " + parts[1] + " })";
+                                                    else cmd = "hl.dsp.window.resize()";
+                                                }
+                                                else if (model.dispatcher === "workspace" || model.dispatcher === "movetoworkspace") {
+                                                    let ws = model.command.trim();
+                                                    let val = /^\d+$/.test(ws) ? ws : "'" + ws + "'";
+                                                    cmd = model.dispatcher === "workspace" ? "hl.dsp.focus({ workspace = " + val + " })" : "hl.dsp.window.move({ workspace = " + val + " })";
+                                                }
+                                                else if (model.dispatcher === "fullscreen") {
+                                                    let fs = model.command.trim().split(" ")[0];
+                                                    if (fs === "1") cmd = "hl.dsp.window.fullscreen({ mode = 'maximized', action = 'set' })";
+                                                    else if (fs === "0") cmd = "hl.dsp.window.fullscreen({ mode = 'fullscreen', action = 'set' })";
+                                                    else cmd = "hl.dsp.window.fullscreen({ action = 'toggle' })";
+                                                }
+                                                else cmd = "hl.dsp.exec_cmd([[" + model.command + "]])";
+                                                Quickshell.execDetached(["hyprctl", "--batch", "dispatch " + cmd]); 
+                                            }
                                         }
                                     }
                                 }
@@ -2612,8 +2640,8 @@ Item {
                                                 dynamicKeybindsModel.setProperty(outerIndex, "key", k);
                                             }
                                             onActiveFocusChanged: {
-                                                if (!activeFocus) { accumulatedMods = []; accumulatedKey = ""; Quickshell.execDetached(["hyprctl", "dispatch", "submap", "reset"]); }
-                                                else { Quickshell.execDetached(["hyprctl", "dispatch", "submap", "passthru"]); }
+                                                if (!activeFocus) { accumulatedMods = []; accumulatedKey = ""; Quickshell.execDetached(["hyprctl", "--batch", "dispatch hl.dsp.submap('reset')"]); }
+                                                else { Quickshell.execDetached(["hyprctl", "--batch", "dispatch hl.dsp.submap('passthru')"]); }
                                             }
                                         }
                                     }
@@ -3063,7 +3091,7 @@ Item {
                             }
                             onActiveFocusChanged: { if (activeFocus && !root.isSearchMode) root.isSearchMode = true; }
                             onTextChanged: { root.globalSearchQuery = text; if (!root.isSearchMode && text.length > 0) root.isSearchMode = true; }
-                            Keys.onEscapePressed: { root.isSearchMode = false; root.globalSearchQuery = ""; text = ""; root.searchHighlightIndex = -1; root.forceActiveFocus(); }
+                            Keys.onEscapePressed: (event) => { root.isSearchMode = false; root.globalSearchQuery = ""; text = ""; root.searchHighlightIndex = -1; root.forceActiveFocus(); }
                             Keys.onDownPressed: (event) => {
                                 root.forceActiveFocus();
                                 let total = root.searchResultItems.length;
@@ -3739,7 +3767,7 @@ Item {
                                                     font.family: "JetBrains Mono"; font.pixelSize: root.s(10); color: root.text; clip: true; selectByMouse: true
                                                     text: model.command
                                                     onTextChanged: dynamicStartupModel.setProperty(outerIndex, "command", text)
-                                                    Keys.onEscapePressed: { dynamicStartupModel.setProperty(outerIndex, "isEditing", false); root.forceActiveFocus(); }
+                                                    Keys.onEscapePressed: (event) => { dynamicStartupModel.setProperty(outerIndex, "isEditing", false); root.forceActiveFocus(); }
                                                     Text {
                                                         anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
                                                         text: "e.g. waybar, dunst, nm-applet"

@@ -13,6 +13,9 @@ AUTOSTART_CONF="$CONF_DIR/autostart.conf"
 ENV_CONF="$CONF_DIR/env.conf"
 KEYBINDS_CONF="$CONF_DIR/keybindings.conf"
 MONITORS_CONF="$CONF_DIR/monitors.conf"
+LUA_GEN="$HOME/.config/hypr/scripts/gen_lua_config.py"
+LUA_NONMON="$CONF_DIR/settings.lua $CONF_DIR/keybindings.lua $CONF_DIR/autostart.lua $CONF_DIR/env.lua"
+LUA_MON="$CONF_DIR/monitors.lua"
 ZSH_RC="$HOME/.zshrc"
 
 # Ensure the required files and directories exist
@@ -27,8 +30,8 @@ compile_settings() {
 
     # Hash existing configs before any changes, split by monitor vs non-monitor.
     # This means a pure uiScale/wallpaperDir/weatherApiKey write never triggers a reload.
-    OLD_NONMON_HASH=$(md5sum "$SETTINGS_CONF" "$KEYBINDS_CONF" "$AUTOSTART_CONF" "$ENV_CONF" 2>/dev/null | md5sum)
-    OLD_MON_HASH=$(md5sum "$MONITORS_CONF" 2>/dev/null | md5sum)
+    OLD_NONMON_HASH=$(md5sum "$SETTINGS_CONF" "$KEYBINDS_CONF" "$AUTOSTART_CONF" "$ENV_CONF" $LUA_NONMON 2>/dev/null | md5sum)
+    OLD_MON_HASH=$(md5sum "$MONITORS_CONF" $LUA_MON 2>/dev/null | md5sum)
 
     # Read state from JSON (Using 'has' to safely parse booleans)
     LANG=$(jq -r '.language // "us"' "$SETTINGS_FILE")
@@ -100,9 +103,14 @@ compile_settings() {
         echo "monitor = , preferred, auto, 1" >> "$MONITORS_CONF"
     fi
 
+    # 6. Regenerate the Lua config modules (mirrors steps 1-5 for Hyprland's
+    # Lua config format, which takes precedence over the legacy .conf files)
+    echo "Regenerating Lua config modules..."
+    python3 "$LUA_GEN"
+
     # Hash after changes
-    NEW_NONMON_HASH=$(md5sum "$SETTINGS_CONF" "$KEYBINDS_CONF" "$AUTOSTART_CONF" "$ENV_CONF" 2>/dev/null | md5sum)
-    NEW_MON_HASH=$(md5sum "$MONITORS_CONF" 2>/dev/null | md5sum)
+    NEW_NONMON_HASH=$(md5sum "$SETTINGS_CONF" "$KEYBINDS_CONF" "$AUTOSTART_CONF" "$ENV_CONF" $LUA_NONMON 2>/dev/null | md5sum)
+    NEW_MON_HASH=$(md5sum "$MONITORS_CONF" $LUA_MON 2>/dev/null | md5sum)
 
     if [ "$OLD_MON_HASH" != "$NEW_MON_HASH" ]; then
         # Monitor layout actually changed — full reload needed

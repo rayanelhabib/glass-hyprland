@@ -1,0 +1,6 @@
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+--  ◈ CORE VARIABLES
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-- Legacy `$var` substitutions are not available in Lua configs. The former
+-- `$mainMod = SUPER` and `$terminal = kitty` are inlined directly at the use
+-- sites (keybinds.lua uses `mainMod`; terminals are launched with kitty).

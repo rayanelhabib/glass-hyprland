@@ -599,11 +599,11 @@ Variants {
                                             if (modelData.isRunning && modelData.match) {
                                                 let focusCmd = "";
                                                 if (modelData.workspace && modelData.workspace !== "") {
-                                                    focusCmd = `hyprctl dispatch workspace "${modelData.workspace}"; hyprctl dispatch focuswindow "address:${modelData.address}" 2>/dev/null || hyprctl dispatch focuswindow "class:^(${modelData.match})$"`;
+                                                    focusCmd = `hyprctl --batch "dispatch hl.dsp.focus({ workspace = '${modelData.workspace}' }); dispatch hl.dsp.focus({ window = 'address:${modelData.address}' })" 2>/dev/null || hyprctl --batch "dispatch hl.dsp.focus({ window = 'class:^(${modelData.match})$' })"`;
                                                 } else if (modelData.address && modelData.address !== "") {
-                                                    focusCmd = `hyprctl dispatch focuswindow "address:${modelData.address}" 2>/dev/null || hyprctl dispatch focuswindow "class:^(${modelData.match})$"`;
+                                                    focusCmd = `hyprctl --batch "dispatch hl.dsp.focus({ window = 'address:${modelData.address}' })" 2>/dev/null || hyprctl --batch "dispatch hl.dsp.focus({ window = 'class:^(${modelData.match})$' })"`;
                                                 } else {
-                                                    focusCmd = `hyprctl dispatch focuswindow "class:^(${modelData.match})$"`;
+                                                    focusCmd = `hyprctl --batch "dispatch hl.dsp.focus({ window = 'class:^(${modelData.match})$' })"`;
                                                 }
                                                 Quickshell.execDetached(["bash", "-c", focusCmd]);
                                             } else {

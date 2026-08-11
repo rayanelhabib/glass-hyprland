@@ -1146,7 +1146,7 @@ Item {
             scale: matchesFilter ? 1.0 : 0.5
 
             height: matchesFilter ? targetHeight : 0
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenter: parent ? parent.verticalCenter : undefined
             anchors.verticalCenterOffset: window.s(15)
 
             z: isVisuallyEnlarged ? 10 : 1

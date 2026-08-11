@@ -6,5 +6,12 @@
 gesture = 3, horizontal, workspace
 bindm = SUPER, mouse:272, movewindow
 bindm = SUPER, mouse:273, resizewindow
+bindm = SUPER, mouse:274, fullscreen, toggle
+
+# Windows-style half-screen snapping (SUPER+ALT+arrows; SUPER+CTRL is move, SUPER is focus)
+bind = SUPER ALT, left, exec, ~/.config/hypr/scripts/snap_window.sh left
+bind = SUPER ALT, right, exec, ~/.config/hypr/scripts/snap_window.sh right
+bind = SUPER ALT, up, exec, ~/.config/hypr/scripts/snap_window.sh top
+bind = SUPER ALT, down, exec, ~/.config/hypr/scripts/snap_window.sh bottom
 
 # ───────── Dynamic Settings Binds ─────────

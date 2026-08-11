@@ -23,7 +23,7 @@ if [[ -f "$TIMEFILE" ]]; then
     
     if (( DIFF > 0 && DIFF < THRESHOLD )); then
         # Double-click detected! Toggle maximize
-        hyprctl dispatch fullscreen 1 2>/dev/null
+        hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "set" })' 2>/dev/null
         rm -f "$TIMEFILE"
         exit 0
     fi

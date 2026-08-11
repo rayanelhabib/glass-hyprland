@@ -1359,7 +1359,7 @@ Item {
                                                     window.forceActiveFocus();
                                                 }
                                             }
-                                            Keys.onEscapePressed: { window.pendingWifiId = ""; window.pendingWifiSsid = ""; text = ""; window.forceActiveFocus(); }
+                                            Keys.onEscapePressed: (event) => { window.pendingWifiId = ""; window.pendingWifiSsid = ""; text = ""; window.forceActiveFocus(); }
                                         }
                                     }
                                 }

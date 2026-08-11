@@ -58,23 +58,23 @@ Item {
     // -------------------------------------------------------------------------
     // KEYBOARD SHORTCUTS & NAVIGATION
     // -------------------------------------------------------------------------
-    Keys.onEscapePressed: {
+    Keys.onEscapePressed: (event) => {
         closeSequence.start();
         event.accepted = true;
     }
-    Keys.onTabPressed: {
+    Keys.onTabPressed: (event) => {
         let next = (currentTab + 1) % tabNames.length;
         if (next === 0) next = 1; // Skip Settings Tab visually
         currentTab = next;
         event.accepted = true;
     }
-    Keys.onBacktabPressed: {
+    Keys.onBacktabPressed: (event) => {
         let prev = (currentTab - 1 + tabNames.length) % tabNames.length;
         if (prev === 0) prev = tabNames.length - 1; // Skip Settings Tab visually
         currentTab = prev;
         event.accepted = true;
     }
-    Keys.onLeftPressed: {
+    Keys.onLeftPressed: (event) => {
         if (currentTab === 2) { 
             if (selectedModuleIndex > 0) {
                 selectedModuleIndex--;
@@ -83,7 +83,7 @@ Item {
             event.accepted = true;
         }
     }
-    Keys.onRightPressed: {
+    Keys.onRightPressed: (event) => {
         if (currentTab === 2) { 
             if (selectedModuleIndex < modulesDataModel.count - 1) {
                 selectedModuleIndex++;
@@ -92,14 +92,14 @@ Item {
             event.accepted = true;
         }
     }
-    Keys.onReturnPressed: {
+    Keys.onReturnPressed: (event) => {
         if (currentTab === 2) { 
             let target = modulesDataModel.get(selectedModuleIndex).target;
             Quickshell.execDetached(["bash", Quickshell.env("HOME") + "/.config/hypr/scripts/qs_manager.sh", "toggle", target]);
             event.accepted = true;
         }
     }
-    Keys.onEnterPressed: { Keys.onReturnPressed(event); }
+    Keys.onEnterPressed: (event) => { Keys.onReturnPressed(event); }
 
     MatugenColors { id: _theme }
     // -------------------------------------------------------------------------
@@ -506,6 +506,7 @@ Item {
                                     Behavior on color { ColorAnimation { duration: 150 } }
 
                                     RowLayout {
+                                        id: tabTextRow
                                         anchors.fill: parent
                                         anchors.leftMargin: root.s(15)
                                         spacing: root.s(12)
@@ -513,7 +514,7 @@ Item {
                                         // The "Slide Right" text effect from snippet 2
                                         property real contentShift: parent.isActive ? root.s(6) : 0
                                         Behavior on contentShift { NumberAnimation { duration: 400; easing.type: Easing.OutExpo } }
-                                        transform: Translate { x: contentShift }
+                                        transform: Translate { x: tabTextRow.contentShift }
                                         
                                         Item {
                                             Layout.preferredWidth: root.s(24)
@@ -679,14 +680,15 @@ Item {
             // ------------------------------------------
             // TAB 1: SYSTEM OVERVIEW
             // ------------------------------------------
-            Item {
+Item {
+                id: tabModules
                 anchors.fill: parent
-                visible: root.currentTab === 1
+                visible: root.currentTab === 2
                 opacity: visible ? 1.0 : 0.0
                 property real slideY: visible ? 0 : root.s(10)
                 
                 Behavior on slideY { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
-                transform: Translate { y: slideY }
+                transform: Translate { y: tabModules.slideY }
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
                 ListModel {
@@ -1105,13 +1107,14 @@ Item {
             // TAB 2: MODULES
             // ------------------------------------------
             Item {
+                id: tabModules
                 anchors.fill: parent
                 visible: root.currentTab === 2
                 opacity: visible ? 1.0 : 0.0
                 property real slideY: visible ? 0 : root.s(10)
                 
                 Behavior on slideY { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
-                transform: Translate { y: slideY }
+                transform: Translate { y: tabModules.slideY }
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
                 ColumnLayout {
@@ -1299,13 +1302,14 @@ Item {
             // TAB 3: MATUGEN ENGINE
             // ------------------------------------------
             Item {
+                id: tabMatugen
                 anchors.fill: parent
                 visible: root.currentTab === 3
                 opacity: visible ? 1.0 : 0.0
                 property real slideY: visible ? 0 : root.s(10)
                 
                 Behavior on slideY { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
-                transform: Translate { y: slideY }
+                transform: Translate { y: tabMatugen.slideY }
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
                 ColumnLayout {
@@ -1528,13 +1532,14 @@ Item {
             // TAB 4: ABOUT
             // ------------------------------------------
             Item {
+                id: tabAbout
                 anchors.fill: parent
                 visible: root.currentTab === 4
                 opacity: visible ? 1.0 : 0.0
                 property real slideY: visible ? 0 : root.s(10)
                 
                 Behavior on slideY { NumberAnimation { duration: 250; easing.type: Easing.OutQuart } }
-                transform: Translate { y: slideY }
+                transform: Translate { y: tabAbout.slideY }
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
                 RowLayout {

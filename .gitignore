@@ -9,3 +9,7 @@
 .idea
 commit.txt
 .vscode
+
+# Python caches
+__pycache__/
+*.pyc

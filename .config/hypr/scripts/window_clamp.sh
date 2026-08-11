@@ -13,9 +13,14 @@ clamp_active_window() {
     local win
     win=$(hyprctl activewindow -j 2>/dev/null) || return
 
-    local is_float x y w h
+    local is_float x y w h fs
     is_float=$(echo "$win" | jq -r '.floating // false')
     [[ "$is_float" != "true" ]] && return
+
+    # Never clamp a fullscreen/maximized window — it occupies the whole screen
+    # by design and must not be shoved below the top bar.
+    fs=$(echo "$win" | jq -r '.fullscreen // 0')
+    [[ "$fs" != "0" ]] && return
 
     x=$(echo "$win" | jq '.at[0] // 0')
     y=$(echo "$win" | jq '.at[1] // 0')
@@ -57,7 +62,7 @@ clamp_active_window() {
     fi
 
     if [[ "$clamped" == "true" ]]; then
-        hyprctl dispatch movewindowpixel "exact $new_x $new_y,activewindow" 2>/dev/null
+        hyprctl dispatch "hl.dsp.window.move({ x = $new_x, y = $new_y })" 2>/dev/null
     fi
 }
 

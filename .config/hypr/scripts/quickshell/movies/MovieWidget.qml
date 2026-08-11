@@ -1170,19 +1170,19 @@ Item {
                             if (text.trim() === "") { searchResults.clear(); window.isSearchingNetwork = false; searchDebounceTimer.stop() }
                             else searchDebounceTimer.restart()
                         }
-                        Keys.onRightPressed: {
+                        Keys.onRightPressed: (event) => {
                             window.isKeyboardNav = true; keyboardNavTimer.restart()
                             let g = getActiveGrid()
                             if (g && g.count > 0 && g.currentIndex < g.count - 1) g.currentIndex++
                             event.accepted = true
                         }
-                        Keys.onLeftPressed: {
+                        Keys.onLeftPressed: (event) => {
                             window.isKeyboardNav = true; keyboardNavTimer.restart()
                             let g = getActiveGrid()
                             if (g && g.count > 0 && g.currentIndex > 0) g.currentIndex--
                             event.accepted = true
                         }
-                        Keys.onDownPressed: {
+                        Keys.onDownPressed: (event) => {
                             window.isKeyboardNav = true; keyboardNavTimer.restart()
                             let g = getActiveGrid()
                             if (g && g.count > 0) {
@@ -1191,7 +1191,7 @@ Item {
                             }
                             event.accepted = true
                         }
-                        Keys.onUpPressed: {
+                        Keys.onUpPressed: (event) => {
                             window.isKeyboardNav = true; keyboardNavTimer.restart()
                             let g = getActiveGrid()
                             if (g && g.count > 0) {
@@ -1200,9 +1200,9 @@ Item {
                             }
                             event.accepted = true
                         }
-                        Keys.onTabPressed: { window.mediaType = window.mediaType === "movie" ? "tv" : "movie"; if (text.trim() !== "") doSearch(text); event.accepted = true }
-                        Keys.onBacktabPressed: { window.mediaType = window.mediaType === "movie" ? "tv" : "movie"; if (text.trim() !== "") doSearch(text); event.accepted = true }
-                        Keys.onReturnPressed: {
+                        Keys.onTabPressed: (event) => { window.mediaType = window.mediaType === "movie" ? "tv" : "movie"; if (text.trim() !== "") doSearch(text); event.accepted = true }
+                        Keys.onBacktabPressed: (event) => { window.mediaType = window.mediaType === "movie" ? "tv" : "movie"; if (text.trim() !== "") doSearch(text); event.accepted = true }
+                        Keys.onReturnPressed: (event) => {
                             if (text.trim() !== "" && searchResults.count === 0 && !window.isSearchingNetwork) {
                                 doSearch(text)
                             } else if (window.isKeyboardNav) {

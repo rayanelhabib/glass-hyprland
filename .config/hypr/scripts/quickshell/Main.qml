@@ -435,7 +435,7 @@ PanelWindow {
                 anchors.fill: parent
                 focus: true
 
-                Keys.onEscapePressed: {
+                Keys.onEscapePressed: (event) => {
                     switchWidget("hidden", "");
                     event.accepted = true;
                 }
@@ -615,12 +615,14 @@ PanelWindow {
             NumberAnimation {
                 target: masterWindow; property: "animW"
                 to: masterWindow.targetW; duration: 280
-                easing.type: Easing.bezierCurve(0.34, 1.35, 0.64, 1.0)
+                easing.type: Easing.Bezier
+                easing.bezierCurve: [0.34, 1.35, 0.64, 1.0]
             }
             NumberAnimation {
                 target: masterWindow; property: "animX"
                 to: masterWindow.musicPillRight - masterWindow.targetW; duration: 280
-                easing.type: Easing.bezierCurve(0.34, 1.35, 0.64, 1.0)
+                easing.type: Easing.Bezier
+                easing.bezierCurve: [0.34, 1.35, 0.64, 1.0]
             }
         }
 
@@ -631,7 +633,11 @@ PanelWindow {
         id: musicOpenProgress
         running: false
         NumberAnimation { target: masterWindow; property: "morphProgress"; to: 0.35; duration: 170; easing.type: Easing.OutCubic }
-        NumberAnimation { target: masterWindow; property: "morphProgress"; to: 0.92; duration: 280; easing.type: Easing.bezierCurve(0.34, 1.35, 0.64, 1.0) }
+        NumberAnimation {
+            target: masterWindow; property: "morphProgress"; to: 0.92; duration: 280
+            easing.type: Easing.Bezier
+            easing.bezierCurve: [0.34, 1.35, 0.64, 1.0]
+        }
         NumberAnimation { target: masterWindow; property: "morphProgress"; to: 1.0; duration: 260; easing.type: Easing.OutBack }
     }
 

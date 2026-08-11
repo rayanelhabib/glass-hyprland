@@ -141,6 +141,13 @@
     {
       "type": "bind",
       "mods": "$mainMod",
+      "key": "M",
+      "dispatcher": "fullscreen",
+      "command": "0"
+    },
+    {
+      "type": "bind",
+      "mods": "$mainMod",
       "key": "R",
       "dispatcher": "exec",
       "command": "bash ~/.config/hypr/scripts/reload.sh"
@@ -316,28 +323,28 @@
     {
       "type": "bindl",
       "mods": "",
-      "key": "xf86AudioMicMute",
+      "key": "XF86AudioMicMute",
       "dispatcher": "exec",
       "command": "swayosd-client --input-volume mute-toggle"
     },
     {
       "type": "bindl",
       "mods": "",
-      "key": "xf86audiomute",
+      "key": "XF86AudioMute",
       "dispatcher": "exec",
       "command": "swayosd-client --output-volume mute-toggle"
     },
     {
       "type": "bindel",
       "mods": "",
-      "key": "xf86audiolowervolume",
+      "key": "XF86AudioLowerVolume",
       "dispatcher": "exec",
       "command": "swayosd-client --output-volume lower"
     },
     {
       "type": "bindel",
       "mods": "",
-      "key": "xf86audioraisevolume",
+      "key": "XF86AudioRaiseVolume",
       "dispatcher": "exec",
       "command": "swayosd-client --output-volume raise"
     },
