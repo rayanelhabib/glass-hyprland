@@ -189,8 +189,8 @@ def dispatch(kb):
         if not args or args[0] == "2":
             return 'hl.dsp.window.fullscreen({ action = "toggle" })'
         if args[0] == "1":
-            return 'hl.dsp.window.fullscreen({ mode = "maximized", action = "set" })'
-        return 'hl.dsp.window.fullscreen({ mode = "fullscreen", action = "set" })'
+            return 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })'
+        return 'hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" })'
     if name in ("workspace", "movetoworkspace"):
         arg = str(cmd).strip()
         val = arg if arg.isdigit() else lua_str(arg)
