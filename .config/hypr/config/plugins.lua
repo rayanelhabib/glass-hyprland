@@ -21,11 +21,11 @@ if hl.plugin.hyprglass then
             namespaces = "qs-master, qs-topbar, qs-floating-overlay, qs-popups",
             namespace_presets = "qs-master:qsglass, qs-topbar:qsglassbar, qs-floating-overlay:qsglass, qs-popups:qsglass",
             namespace_mask_thresholds = "qs-master=0.01",
-            -- Backdrop is cached and refreshed on discrete events (focus/ws/
-            -- layer moves). Keep it 0: a live per-frame re-sample (1) makes
-            -- every glass surface re-blur the whole background EVERY frame,
-            -- which tanks GPU and makes dragging/holding windows stutter.
-            live_refresh = 0
+            -- Live backdrop: re-sample what's behind the glass every frame so
+            -- the bar shows the real, moving background (e.g. a fullscreen
+            -- window sliding under it). Slightly more GPU work than the cached
+            -- snapshot, but gives the true see-through look.
+            live_refresh = 1
         }
     })
 
@@ -67,9 +67,11 @@ if hl.plugin.hyprglass then
         }
     })
 
-    -- Topbar variant: a touch more frost so text/icons stay readable.
+    -- Topbar variant: a touch more frost so text/icons stay readable, but
+    -- fairly see-through so the live background shows behind the bar.
     hl.plugin.hyprglass.preset("qsglassbar", {
         inherits = "qsglass",
+        glass_opacity = 0.45,
         blur_strength = 0.7,
         blur_iterations = 2,
         refraction_strength = 1.0,

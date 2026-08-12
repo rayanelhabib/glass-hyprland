@@ -90,7 +90,7 @@ restore() { # addr fsd — re-float the window at its recorded drop position
     hyprctl dispatch "hl.dsp.window.move({ x = ${pos% *}, y = ${pos#* }, window = \"address:0x$addr\" })" >/dev/null 2>&1
     if [[ "$fsd" == "1" ]]; then
         local mode
-        mode=$(cat "$TMP/$addr.fsmode" 2>/dev/null || echo 1)
+        mode=$(cat "$TMP/$addr.fsmode" 2>/dev/null || echo 2)
         hyprctl dispatch "hl.dsp.window.fullscreen_state({ internal = $mode, client = 0, window = \"address:0x$addr\" })" >/dev/null 2>&1
     fi
     rm -f "$TMP/$addr.restore"

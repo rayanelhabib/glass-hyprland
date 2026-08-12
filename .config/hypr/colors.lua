@@ -1,4 +1,4 @@
 return {
-    active_border   = "rgba(ffb784ee)",
-    inactive_border = "rgba(6d390caa)",
+    active_border   = "rgba(c6cc7aee)",
+    inactive_border = "rgba(454a03aa)",
 }

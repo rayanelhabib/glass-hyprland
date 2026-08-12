@@ -10,6 +10,10 @@ hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 hl.bind(mainMod .. " + mouse:274", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }), { mouse = true })
 
+-- SUPER+scroll: zoom into immersive fullscreen (top bar + dock hidden); scroll down exits
+hl.bind(mainMod .. " + mouse_up", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "set" }))
+hl.bind(mainMod .. " + mouse_down", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "unset" }))
+
 -- Windows-style half-screen snapping (SUPER+ALT+arrows; SUPER+CTRL is move, SUPER is focus)
 hl.bind(mainMod .. " + ALT + left", hl.dsp.exec_cmd("~/.config/hypr/scripts/snap_window.sh left"))
 hl.bind(mainMod .. " + ALT + right", hl.dsp.exec_cmd("~/.config/hypr/scripts/snap_window.sh right"))
@@ -36,6 +40,7 @@ hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd("kitty"))
 hl.bind(mainMod .. " + F", hl.dsp.exec_cmd("firefox"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("nautilus"))
 hl.bind(mainMod .. " + M", hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/reload.sh"))
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("~/.config/hypr/scripts/qs_manager.sh toggle clipboard"))
 hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("~/.config/hypr/scripts/qs_manager.sh toggle movies"))

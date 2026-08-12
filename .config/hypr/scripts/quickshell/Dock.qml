@@ -324,9 +324,14 @@ Variants {
                     let cmd = `~/.config/hypr/scripts/qs_manager.sh toggle ${item.action}`;
                     Quickshell.execDetached(["bash", "-c", cmd]);
                 } else if (item.cmd && item.cmd !== "") {
-                    Quickshell.execDetached(["bash", "-c", item.cmd]);
+                    let cmd = item.cmd;
+                    if (cmd.includes(" ") || cmd.includes("|") || cmd.includes(">") || cmd.includes("<") || cmd.includes("&") || cmd.includes(";") || cmd.includes("(") || cmd.includes("$")) {
+                        Quickshell.execDetached(["bash", "-c", cmd]);
+                    } else {
+                        Quickshell.execDetached([cmd]);
+                    }
                 } else if (item.match) {
-                    Quickshell.execDetached(["bash", "-c", item.match]);
+                    Quickshell.execDetached(["gio", "launch", item.match + ".desktop"]);
                 }
             }
 

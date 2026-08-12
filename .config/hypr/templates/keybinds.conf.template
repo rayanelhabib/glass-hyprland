@@ -8,6 +8,10 @@ bindm = SUPER, mouse:272, movewindow
 bindm = SUPER, mouse:273, resizewindow
 bindm = SUPER, mouse:274, fullscreen, toggle
 
+# SUPER+scroll: zoom into immersive fullscreen (top bar + dock hidden); scroll down exits
+bind = SUPER, mouse_up, fullscreen, 0
+bind = SUPER, mouse_down, fullscreen, 0
+
 # Windows-style half-screen snapping (SUPER+ALT+arrows; SUPER+CTRL is move, SUPER is focus)
 bind = SUPER ALT, left, exec, ~/.config/hypr/scripts/snap_window.sh left
 bind = SUPER ALT, right, exec, ~/.config/hypr/scripts/snap_window.sh right

@@ -147,6 +147,13 @@
     },
     {
       "type": "bind",
+      "mods": "$mainMod SHIFT",
+      "key": "M",
+      "dispatcher": "fullscreen",
+      "command": "1"
+    },
+    {
+      "type": "bind",
       "mods": "$mainMod",
       "key": "R",
       "dispatcher": "exec",

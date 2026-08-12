@@ -67,6 +67,19 @@ Variants {
                 return scaler.s(val); 
             }
 
+            function toRoman(num) {
+                var vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+                var rom = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"];
+                var result = "";
+                for (var i = 0; i < vals.length; i++) {
+                    while (num >= vals[i]) {
+                        result += rom[i];
+                        num -= vals[i];
+                    }
+                }
+                return result;
+            }
+
             property int barHeight: s(30)
 
 
@@ -750,33 +763,42 @@ Variants {
                                 Repeater {
                                     model: workspacesModel
                                     delegate: Item {
-                                        width: barWindow.s(24)
+                                        property string wsLabel: barWindow.toRoman(parseInt(model.wsId) || 0)
+                                        property bool isActive: model.wsState === "active"
+                                        property bool isOccupied: model.wsState === "occupied"
+                                        width: Math.max(barWindow.s(24), barWindow.s(10) + wsLabel.length * barWindow.s(8))
                                         height: barWindow.barHeight
 
                                         Rectangle {
+                                            id: wsBg
                                             anchors.fill: parent
                                             anchors.margins: barWindow.s(3)
-                                            radius: barWindow.s(7)
-                                            color: model.wsState === "active"
+                                            radius: barWindow.s(6)
+                                            color: isActive
                                                 ? mocha.mauve
-                                                : (model.wsState === "occupied"
-                                                    ? Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.15)
+                                                : (isOccupied
+                                                    ? Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.12)
                                                     : "transparent")
-                                            Behavior on color { ColorAnimation { duration: 200 } }
-                                            scale: wsHover.pressed ? 0.86 : (wsHover.containsMouse ? 1.12 : 1.0)
-                                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                            Behavior on color { ColorAnimation { duration: 350; easing.type: Easing.OutExpo } }
+                                            scale: isActive ? 1.0 : (wsHover.pressed ? 0.86 : (wsHover.containsMouse ? 1.08 : 1.0))
+                                            Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutExpo } }
                                         }
+
                                         Text {
                                             anchors.centerIn: parent
-                                            text: model.wsId
+                                            text: wsLabel
                                             font.family: "JetBrains Mono"
                                             font.pixelSize: barWindow.s(12)
-                                            font.weight: model.wsState === "active" ? Font.Black : (model.wsState === "occupied" ? Font.Bold : Font.Medium)
-                                            color: model.wsState === "active"
+                                            font.weight: isActive ? Font.Black : (isOccupied ? Font.Bold : Font.Medium)
+                                            color: isActive
                                                 ? mocha.crust
-                                                : (wsHover.containsMouse ? mocha.text : (model.wsState === "occupied" ? mocha.text : mocha.overlay0))
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                                : (wsHover.containsMouse ? mocha.text : (isOccupied ? mocha.text : mocha.overlay0))
+                                            Behavior on color { ColorAnimation { duration: 280; easing.type: Easing.OutExpo } }
+                                            Behavior on font.weight { NumberAnimation { duration: 200; easing.type: Easing.OutExpo } }
+                                            scale: isActive ? 1.02 : 1.0
+                                            Behavior on scale { NumberAnimation { duration: 280; easing.type: Easing.OutExpo } }
                                         }
+
                                         MouseArea {
                                             id: wsHover
                                             anchors.fill: parent
