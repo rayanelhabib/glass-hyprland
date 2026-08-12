@@ -81,14 +81,14 @@ hl.config({
 -- ── Curves (beziers) ──
 hl.curve("easeOutExpo", { type = "bezier", points = { { 0.16, 1 }, { 0.3, 1 } } })
 hl.curve("snappy", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.05 } } })
-hl.curve("overshoot", { type = "bezier", points = { { 0.05, 1.4 }, { 0.4, 1 } } })
+hl.curve("overshoot", { type = "bezier", points = { { 0.05, 1.2 }, { 0.15, 1.02 } } })
 hl.curve("soft", { type = "bezier", points = { { 0.4, 0 }, { 0.2, 1 } } })
 
 -- ── Animations ──
-hl.animation({ leaf = "windows", enabled = true, speed = 6, bezier = "easeOutExpo", style = "popin 87%" })
-hl.animation({ leaf = "windowsIn", enabled = true, speed = 6, bezier = "easeOutExpo", style = "popin 87%" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 4, bezier = "easeOutExpo", style = "popin 80%" })
-hl.animation({ leaf = "windowsMove", enabled = true, speed = 5, bezier = "easeOutExpo", style = "slide" })
+hl.animation({ leaf = "windows", enabled = true, speed = 5, bezier = "overshoot", style = "popin 90%" })
+hl.animation({ leaf = "windowsIn", enabled = true, speed = 5, bezier = "overshoot", style = "popin 90%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 4, bezier = "easeOutExpo", style = "popin 85%" })
+hl.animation({ leaf = "windowsMove", enabled = true, speed = 4, bezier = "overshoot", style = "slide" })
 hl.animation({ leaf = "fade", enabled = true, speed = 4, bezier = "soft" })
 hl.animation({ leaf = "fadeIn", enabled = true, speed = 4, bezier = "soft" })
 hl.animation({ leaf = "fadeOut", enabled = true, speed = 4, bezier = "soft" })
