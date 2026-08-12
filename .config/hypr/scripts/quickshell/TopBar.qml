@@ -752,8 +752,52 @@ Variants {
 
                         // ============ WORKSPACES ============
                         Item {
+                            id: wsBox
                             width: wsRow.implicitWidth
                             height: barWindow.barHeight
+
+                            // ── Continuous Sliding Active Pill with Elastic Spring ──
+                            Rectangle {
+                                id: activePill
+                                z: 0
+                                property int activeIdx: workspacesModel.activeIndex >= 0 ? workspacesModel.activeIndex : 0
+                                property Item activeItem: (wsRepeater.count > activeIdx && activeIdx >= 0) ? wsRepeater.itemAt(activeIdx) : null
+
+                                visible: activeItem !== null && workspacesModel.count > 0 && activeItem.width > 0
+                                x: activeItem ? (wsRow.x + activeItem.x + barWindow.s(2)) : 0
+                                y: activeItem ? (wsRow.y + activeItem.y + barWindow.s(3)) : 0
+                                width: activeItem ? (activeItem.width - barWindow.s(4)) : 0
+                                height: activeItem ? (activeItem.height - barWindow.s(6)) : 0
+                                radius: barWindow.s(6)
+                                color: mocha.mauve
+
+                                Behavior on x {
+                                    NumberAnimation {
+                                        duration: 320
+                                        easing.type: Easing.OutBack
+                                        easing.overshoot: 1.25
+                                    }
+                                }
+                                Behavior on y {
+                                    NumberAnimation {
+                                        duration: 320
+                                        easing.type: Easing.OutBack
+                                        easing.overshoot: 1.25
+                                    }
+                                }
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 260
+                                        easing.type: Easing.OutQuint
+                                    }
+                                }
+                                Behavior on height {
+                                    NumberAnimation {
+                                        duration: 260
+                                        easing.type: Easing.OutQuint
+                                    }
+                                }
+                            }
 
                             Row {
                                 id: wsRow
@@ -761,8 +805,10 @@ Variants {
                                 spacing: barWindow.s(3)
 
                                 Repeater {
+                                    id: wsRepeater
                                     model: workspacesModel
                                     delegate: Item {
+                                        id: wsDelegate
                                         property string wsLabel: barWindow.toRoman(parseInt(model.wsId) || 0)
                                         property bool isActive: model.wsState === "active"
                                         property bool isOccupied: model.wsState === "occupied"
@@ -774,14 +820,12 @@ Variants {
                                             anchors.fill: parent
                                             anchors.margins: barWindow.s(3)
                                             radius: barWindow.s(6)
-                                            color: isActive
-                                                ? mocha.mauve
-                                                : (isOccupied
-                                                    ? Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.12)
-                                                    : "transparent")
-                                            Behavior on color { ColorAnimation { duration: 350; easing.type: Easing.OutExpo } }
-                                            scale: isActive ? 1.0 : (wsHover.pressed ? 0.86 : (wsHover.containsMouse ? 1.08 : 1.0))
-                                            Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutExpo } }
+                                            color: !isActive && isOccupied
+                                                ? Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, wsHover.containsMouse ? 0.20 : 0.12)
+                                                : (wsHover.containsMouse ? Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, 0.08) : "transparent")
+                                            Behavior on color { ColorAnimation { duration: 220; easing.type: Easing.OutQuad } }
+                                            scale: wsHover.pressed ? 0.88 : (wsHover.containsMouse ? 1.08 : 1.0)
+                                            Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
                                         }
 
                                         Text {
@@ -793,10 +837,9 @@ Variants {
                                             color: isActive
                                                 ? mocha.crust
                                                 : (wsHover.containsMouse ? mocha.text : (isOccupied ? mocha.text : mocha.overlay0))
-                                            Behavior on color { ColorAnimation { duration: 280; easing.type: Easing.OutExpo } }
-                                            Behavior on font.weight { NumberAnimation { duration: 200; easing.type: Easing.OutExpo } }
-                                            scale: isActive ? 1.02 : 1.0
-                                            Behavior on scale { NumberAnimation { duration: 280; easing.type: Easing.OutExpo } }
+                                            Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.OutQuint } }
+                                            scale: isActive ? 1.06 : (wsHover.containsMouse ? 1.08 : 1.0)
+                                            Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
                                         }
 
                                         MouseArea {
