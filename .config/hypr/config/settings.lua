@@ -59,7 +59,16 @@ hl.config({
         vrr = 0,
         -- Hyprland is launched directly (not via start-hyprland) to avoid a
         -- teardown crash; silence the advisory warning about it.
-        disable_watchdog_warning = true
+        disable_watchdog_warning = true,
+        -- Let a lock screen app be re-launched if it dies while holding the
+        -- session lock. Without this, a crashed lock client leaves the session
+        -- unable to re-lock. Does not affect running apps.
+        allow_session_lock_restore = true,
+        -- Wake the monitors on input. This replaces the old
+        -- `hyprctl dispatch 'hl.dsp.dpms(...)'` hack, which cannot work:
+        -- since 0.55 dispatchers are Lua tables and are not callable over IPC.
+        key_press_enables_dpms = true,
+        mouse_move_enables_dpms = true
     },
 
     ecosystem = {
@@ -81,6 +90,7 @@ hl.config({
 -- ── Curves (beziers) ──
 hl.curve("easeOutExpo", { type = "bezier", points = { { 0.16, 1 }, { 0.3, 1 } } })
 hl.curve("snappy", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.05 } } })
+hl.curve("overshoot", { type = "bezier", points = { { 0.05, 1.4 }, { 0.4, 1 } } })
 hl.curve("soft", { type = "bezier", points = { { 0.4, 0 }, { 0.2, 1 } } })
 
 -- ── Animations ──

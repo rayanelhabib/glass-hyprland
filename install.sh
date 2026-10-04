@@ -1732,24 +1732,40 @@ QtObject {
 EOF
         sudo chown $USER:$USER /usr/share/sddm/themes/matugen-minimal/Colors.qml
 
+        # Ensure cursor theme is available system-wide for SDDM
+        if [ -d "$HOME/.local/share/icons/Bibata-Modern-Classic" ]; then
+            sudo mkdir -p /usr/share/icons/Bibata-Modern-Classic
+            sudo cp -rn "$HOME/.local/share/icons/Bibata-Modern-Classic/"* /usr/share/icons/Bibata-Modern-Classic/ 2>/dev/null || true
+        fi
+
         sudo mkdir -p /etc/sddm.conf.d
         if [[ "$SDDM_WAYLAND" == true ]]; then
             cat <<EOF | sudo tee /etc/sddm.conf.d/10-wayland-matugen.conf > /dev/null
 [Theme]
 Current=matugen-minimal
+CursorTheme=Bibata-Modern-Classic
+CursorSize=24
 
 [General]
 DisplayServer=wayland
-GreeterEnvironment=QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+GreeterEnvironment=QT_WAYLAND_DISABLE_WINDOWDECORATION=1,XCURSOR_THEME=Bibata-Modern-Classic,XCURSOR_SIZE=24
+CursorTheme=Bibata-Modern-Classic
+CursorSize=24
 EOF
         else
             cat <<EOF | sudo tee /etc/sddm.conf.d/10-wayland-matugen.conf > /dev/null
 [Theme]
 Current=matugen-minimal
+CursorTheme=Bibata-Modern-Classic
+CursorSize=24
+
+[General]
+CursorTheme=Bibata-Modern-Classic
+CursorSize=24
 EOF
         fi
 
-        printf "  -> SDDM Theme configured %-17s ${C_GREEN}[ OK ]${RESET}\n" ""
+        printf "  -> SDDM Theme & Cursor configured %-17s ${C_GREEN}[ OK ]${RESET}\n" ""
     fi
 fi
 

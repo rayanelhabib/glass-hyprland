@@ -1,82 +1,27 @@
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 --  ◈ PLUGIN LOADING & CONFIG (hyprglass)
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+--
+-- DO NOT CALL hl.plugin.load() FROM HERE. DO NOT ADD IT BACK.
+--
+-- Hyprland 0.56.1 has unbounded recursion in its config-reload path:
+--   CConfigManager::reload()
+--     -> postConfigReload()
+--       -> handlePluginLoads()      (calls reload() again if pluginsChanged)
+--         -> reload() -> ... forever
+-- CPluginSystem::updateConfigPlugins() only early-returns when the config
+-- plugin list is byte-identical to the previous reload. Loading a plugin from
+-- inside the config makes that list unstable, so pluginsChanged stays true on
+-- every pass. The recursion is synchronous, so it starves the event loop that
+-- the async plugin load needs in order to ever complete. Result: stack
+-- exhaustion -> SIGSEGV -> the whole Wayland session dies and drops you at the
+-- SDDM login screen with every app killed.
+--
+-- hyprglass is therefore loaded and configured OUTSIDE the config reload path
+-- by scripts/hyprglass_startup.sh (hyprctl plugin load + hyprctl setconfig),
+-- which runs from autostart. See that script for the actual settings.
+--
+-- This module is intentionally empty. It is kept because hyprland.lua
+-- requires it and because it documents the crash above.
 
--- NOTE: hyprglass must be loaded at STARTUP. Hot-loading it at runtime
--- (hyprctl plugin load/reload/unload) crashes Hyprland — the crashes were NOT
--- a version issue. Rebuilt against 0.56.1 headers.
-hl.plugin.load("/home/rayan/.local/share/hyprglass/hyprglass.so")
-
-if hl.plugin.hyprglass then
-    hl.plugin.hyprglass.config({
-        -- Windows keep their normal look; glass is enabled ONLY on the quickshell
-        -- master layer surface (qs-master) via the `layers` block below.
-        enabled = 0,
-
-        default_theme = "dark",
-        default_preset = "qsglass",
-
-        layers = {
-            enabled = 1,
-            namespaces = "qs-master, qs-topbar, qs-floating-overlay, qs-popups",
-            namespace_presets = "qs-master:qsglass, qs-topbar:qsglassbar, qs-floating-overlay:qsglass, qs-popups:qsglass",
-            namespace_mask_thresholds = "qs-master=0.01",
-            -- Live backdrop: re-sample what's behind the glass every frame so
-            -- the bar shows the real, moving background (e.g. a fullscreen
-            -- window sliding under it). Slightly more GPU work than the cached
-            -- snapshot, but gives the true see-through look.
-            live_refresh = 1
-        }
-    })
-
-    -- Liquid glass (per hyprnux/hyprglass "glass" preset + the purple-lines
-    -- shader recipe): keep the backdrop sharp (light blur), strong edge
-    -- refraction + chromatic, glossy specular highlights. NO tint, NO frost
-    -- veil — the backdrop's own color IS the glass. Dark override only
-    -- neutralizes the dimming/desaturation defaults that caused the grey cast.
-    -- Real-glass recipe: the backdrop passes through UNTOUCHED (zero blur, no
-    -- tint, no brightness/saturation change — nothing to add colour or grey).
-    -- The liquid look is carried entirely by the edge effects: refraction warp,
-    -- chromatic fringing, lens distortion and specular gloss on the rim.
-    hl.plugin.hyprglass.preset("qsglass", {
-        inherits = "glass",
-        blur_strength = 0.45,
-        blur_iterations = 2,
-        lens_distortion = 0.05,
-        refraction_strength = 1.2,
-        chromatic_aberration = 0.0,
-        fresnel_strength = 0.15,
-        specular_strength = 0.5,
-        glass_opacity = 0.92,
-        edge_thickness = 0.01,
-        tint_color = 0,
-        dark = {
-            brightness = 1.0,
-            contrast = 1.0,
-            saturation = 1.0,
-            adaptive_dim = 0.0,
-            adaptive_boost = 0.0
-        },
-        light = {
-            brightness = 1.0,
-            contrast = 1.0,
-            saturation = 1.0,
-            adaptive_dim = 0.0,
-            adaptive_boost = 0.0,
-            tint_color = 0
-        }
-    })
-
-    -- Topbar variant: a touch more frost so text/icons stay readable, but
-    -- fairly see-through so the live background shows behind the bar.
-    hl.plugin.hyprglass.preset("qsglassbar", {
-        inherits = "qsglass",
-        glass_opacity = 0.45,
-        blur_strength = 0.7,
-        blur_iterations = 2,
-        refraction_strength = 1.0,
-        specular_strength = 0.3,
-        fresnel_strength = 0.1,
-        edge_thickness = 0.006
-    })
-end
+return true

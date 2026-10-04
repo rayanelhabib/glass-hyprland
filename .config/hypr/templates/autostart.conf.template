@@ -4,5 +4,9 @@
 exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE QT_QPA_PLATFORM
 exec-once = systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE QT_QPA_PLATFORM
 exec-once = hyprctl seterror disable
+# hyprglass MUST be loaded here, not from config/plugins.lua — loading a plugin
+# during config load makes Hyprland 0.56.1 recurse and segfault the session.
+exec-once = ~/.config/hypr/scripts/hyprglass_startup.sh
 exec-once = ~/.config/hypr/scripts/window_clamp.sh
 exec-once = ~/.config/hypr/scripts/floating_drag.sh
+exec-once = ~/.config/hypr/scripts/fix_antigravity_locks.sh

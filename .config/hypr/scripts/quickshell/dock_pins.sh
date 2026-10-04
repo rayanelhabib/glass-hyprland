@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # dock_pins.sh — Parse .desktop files and output JSON for the Dock's pinned items.
-# Usage: dock_pins.sh org.gnome.Nautilus kitty brave-browser ...
+# Reads pinned app IDs from command arguments or ~/.config/hypr/settings.json
+
+SETTINGS_FILE="$HOME/.config/hypr/settings.json"
+DEFAULT_PINS=("org.gnome.Nautilus" "kitty" "brave-browser" "antigravity-ide" "discord" "spotify-launcher")
 
 SEARCH_DIRS=(
     "$HOME/.local/share/applications"
@@ -14,6 +17,12 @@ find_desktop() {
         local f="$dir/$id.desktop"
         [[ -f "$f" ]] && echo "$f" && return
     done
+    for dir in "${SEARCH_DIRS[@]}"; do
+        local match_wm=$(grep -il "StartupWMClass=$id" "$dir"/*.desktop 2>/dev/null | head -n 1)
+        [[ -n "$match_wm" ]] && echo "$match_wm" && return
+        local match_exec=$(grep -il "Exec=.*$id" "$dir"/*.desktop 2>/dev/null | head -n 1)
+        [[ -n "$match_exec" ]] && echo "$match_exec" && return
+    done
     return 1
 }
 
@@ -23,7 +32,6 @@ parse_desktop() {
     local in_desktop_entry=false
 
     while IFS= read -r line; do
-        # Only parse the [Desktop Entry] section (stop at next section)
         if [[ "$line" == "[Desktop Entry]" ]]; then
             in_desktop_entry=true
             continue
@@ -50,33 +58,39 @@ parse_desktop() {
         esac
     done < "$file"
 
-    # Clean Exec: strip field codes like %U %F %u etc.
     exec_cmd=$(echo "$exec_cmd" | sed 's/ %[UuFfcidDnNvmk]//g; s/--url -- //g')
 
-    # Match pattern: use WMClass if available, else derive from exec or id
     local match
     if [[ -n "$wm_class" ]]; then
         match=$(echo "$wm_class" | tr '[:upper:]' '[:lower:]')
     else
-        # Use the basename of exec command
         match=$(basename "$(echo "$exec_cmd" | awk '{print $1}')" | tr '[:upper:]' '[:lower:]')
     fi
 
-    # Emit JSON (using jq for safe escaping)
     jq -n --arg id "$id" --arg name "$name" --arg icon "$icon" \
           --arg cmd "$exec_cmd" --arg match "$match" \
           '{id: $id, name: $name, icon: $icon, fallback: "", cmd: $cmd, match: $match}'
 }
 
-# --- Main ---
+# Collect IDs
+app_ids=()
+if [[ $# -gt 0 ]]; then
+    app_ids=("$@")
+elif [[ -f "$SETTINGS_FILE" ]]; then
+    mapfile -t app_ids < <(jq -r '.dockPins[]? // empty' "$SETTINGS_FILE" 2>/dev/null)
+fi
+
+if [[ ${#app_ids[@]} -eq 0 ]]; then
+    app_ids=("${DEFAULT_PINS[@]}")
+fi
+
 items=()
-for app_id in "$@"; do
+for app_id in "${app_ids[@]}"; do
     desktop_file=$(find_desktop "$app_id") || continue
     json=$(parse_desktop "$desktop_file" "$app_id") || continue
     items+=("$json")
 done
 
-# Output as JSON array
 if [[ ${#items[@]} -gt 0 ]]; then
     printf '%s\n' "${items[@]}" | jq -sc '.'
 else

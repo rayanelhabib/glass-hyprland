@@ -28,9 +28,15 @@ hl.env("MALLOC_MMAP_THRESHOLD_", "131072")
 hl.env("MALLOC_ARENA_MAX", "4")
 
 -- Hardware Acceleration Options (AMD Radeon iGPU + NVIDIA dGPU)
--- NOTE: AQ_DRM_DEVICES is split on ":" so the PCI by-path (pci-0000:06:00.0) breaks
--- it and Hyprland finds no GPUs -> crash -> back to login. Auto-detect instead.
+-- NOTE: AQ_DRM_DEVICES is split on ":" so a PCI by-path (pci-0000:06:00.0)
+-- breaks GPU detection -> "Found no gpus" -> Hyprland crash -> black screen
+-- and bounce back to the login screen. Leave unset and auto-detect instead.
+-- If you must pin a GPU, use a path WITHOUT colons: /dev/dri/card2 (AMD iGPU)
+-- hl.env("AQ_DRM_DEVICES", "/dev/dri/card2")
 
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 hl.env("LIBVA_DRIVER_NAME", "radeonsi")
 hl.env("VDPAU_DRIVER", "radeonsi")
+
+hl.env("PATH", "/home/rayan/.local/bin:" .. (os.getenv("PATH") or "/usr/local/bin:/usr/bin:/bin"))
+hl.env("QML2_IMPORT_PATH", "/home/rayan/.local/lib/qt6/qml:/usr/lib/qt6/qml")

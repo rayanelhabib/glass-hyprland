@@ -55,9 +55,18 @@ ShellRoot {
         onTriggered: pam.start()
     }
 
+    // Defer Qt.quit() to allow Wayland WlSessionLock unlock request to process
+    Timer {
+        id: quitTimer
+        interval: 150
+        repeat: false
+        onTriggered: Qt.quit()
+    }
+
     // System Authentication hook
     PamContext {
         id: pam
+        config: "system-auth"
         
         // Defer start until after component initialization to prevent memory segfaults
         Component.onCompleted: pamActionTimer.start()
@@ -66,7 +75,7 @@ ShellRoot {
             lockUI.authenticating = false;
             if (result === PamResult.Success) {
                 rootLock.locked = false;
-                Qt.quit();
+                quitTimer.start();
             } else {
                 lockUI.failed = true;
                 lockUI.statusText = "Access Denied";

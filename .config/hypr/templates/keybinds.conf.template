@@ -6,11 +6,13 @@
 gesture = 3, horizontal, workspace
 bindm = SUPER, mouse:272, movewindow
 bindm = SUPER, mouse:273, resizewindow
-bindm = SUPER, mouse:274, fullscreen, toggle
+# NOTE: bindm only takes (mods, key, dispatcher). Extra args make Hyprland
+# reject the config ("too many args"). Fullscreen toggle must use bind.
+bind = SUPER, mouse:274, fullscreen, toggle
 
 # SUPER+scroll: zoom into immersive fullscreen (top bar + dock hidden); scroll down exits
 bind = SUPER, mouse_up, fullscreen, 0
-bind = SUPER, mouse_down, fullscreen, 0
+bind = SUPER, mouse_down, fullscreen, 2
 
 # Windows-style half-screen snapping (SUPER+ALT+arrows; SUPER+CTRL is move, SUPER is focus)
 bind = SUPER ALT, left, exec, ~/.config/hypr/scripts/snap_window.sh left

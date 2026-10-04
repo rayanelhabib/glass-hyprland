@@ -157,6 +157,13 @@
       "mods": "$mainMod",
       "key": "R",
       "dispatcher": "exec",
+      "command": "hyprland-run"
+    },
+    {
+      "type": "bind",
+      "mods": "$mainMod SHIFT",
+      "key": "R",
+      "dispatcher": "exec",
       "command": "bash ~/.config/hypr/scripts/reload.sh"
     },
     {
@@ -546,5 +553,13 @@
     {
       "command": "bash -c 'amixer -c 2 sset \"Mic Boost\" 3 2>/dev/null; amixer -c 2 sset Capture cap 100% 2>/dev/null; wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 1.30'"
     }
+  ],
+  "dockPins": [
+    "org.gnome.Nautilus",
+    "kitty",
+    "discord",
+    "spotify-launcher",
+    "google-chrome",
+    "code"
   ]
 }

@@ -83,7 +83,7 @@ Variants {
             property int barHeight: s(30)
 
 
-            height: barHeight
+            implicitHeight: barHeight
             margins { top: 0; bottom: 0; left: 0; right: 0 }
             exclusiveZone: barHeight 
             color: "transparent"

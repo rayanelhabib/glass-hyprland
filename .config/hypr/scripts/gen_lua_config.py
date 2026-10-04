@@ -48,6 +48,77 @@ def lua_str(value):
     return '"' + value + '"'
 
 
+def sanitize_aq_drm(value):
+    """Return a safe AQ_DRM_DEVICES value, or None to drop it.
+
+    Aquamarine splits AQ_DRM_DEVICES on ':'. A PCI by-path such as
+    /dev/dri/by-path/pci-0000:06:00.0-card is therefore shredded into
+    invalid fragments, GPU detection fails ("Found no gpus"), and Hyprland
+    crashes at startup -> black screen -> bounce back to the login screen.
+    Resolve by-path entries to /dev/dri/cardN (no colons) and drop anything
+    that is not an existing dri node.
+    """
+    import re
+
+    value = str(value).strip()
+    if not value:
+        return None
+    if "by-path" in value or "pci-" in value:
+        candidates = re.findall(r"/dev/dri/[^\s]+", value)
+        if not candidates:
+            return None
+        resolved = []
+        for cand in candidates:
+            if not os.path.exists(cand):
+                return None
+            resolved.append(os.path.realpath(cand))
+        if not resolved:
+            return None
+        value = ":".join(resolved)
+    segments = [seg.strip() for seg in value.split(":") if seg.strip()]
+    if not segments:
+        return None
+    for seg in segments:
+        if not seg.startswith("/dev/dri/") or not os.path.exists(seg):
+            return None
+    return ":".join(segments)
+
+
+def sanitize_hardware_envs(settings, template_text=""):
+    """Filter settings['hardwareEnvs'] down to login-safe KEY,VALUE lines.
+
+    Keys already present in the env template are skipped so regeneration
+    cannot duplicate (or fight over) the same variable.
+    """
+    already = set()
+    for raw in template_text.splitlines():
+        raw = raw.strip()
+        if raw.startswith("hl.env("):
+            inner = raw[len("hl.env(") :].rstrip(")")
+            key = inner.split(",", 1)[0].strip().strip('"').strip("'")
+            if key:
+                already.add(key)
+
+    safe = []
+    for hw in settings.get("hardwareEnvs", []) or []:
+        line = str(hw).strip()
+        if not line:
+            continue
+        if line.lower().startswith("env "):
+            line = line.split("=", 1)[1].strip()
+        key, _, value = line.partition(",")
+        key = key.strip()
+        value = value.strip()
+        if not key or key in already:
+            continue
+        if key == "AQ_DRM_DEVICES":
+            value = sanitize_aq_drm(value)
+            if not value:
+                continue
+        safe.append("env = %s,%s" % (key, value))
+    return safe
+
+
 def gen_env(settings):
     home = os.path.expanduser("~")
     pics = xdg_dir("PICTURES", os.path.join(home, "Pictures"))
@@ -61,13 +132,10 @@ def gen_env(settings):
     content = content.replace("{{SCRIPT_DIR}}", os.path.join(BASE, "scripts"))
 
     hw_lines = []
-    for hw in settings.get("hardwareEnvs", []) or []:
-        line = str(hw).strip()
-        if line.lower().startswith("env "):
-            line = line.split("=", 1)[1].strip()
-        key, _, value = line.partition(",")
-        if key.strip():
-            hw_lines.append('hl.env("%s", "%s")' % (key.strip(), value.strip()))
+    for line in sanitize_hardware_envs(settings, content):
+        payload = line.split("=", 1)[1].strip()
+        key, _, value = payload.partition(",")
+        hw_lines.append('hl.env("%s", "%s")' % (key.strip(), value.strip()))
     content = content.replace("{{HARDWARE_ENV}}", "\n".join(hw_lines))
 
     write(os.path.join(CONF_DIR, "env.lua"), content)

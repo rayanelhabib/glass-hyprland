@@ -44,8 +44,47 @@ compile_settings() {
     PIC_DIR="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")"
     VID_DIR="$(xdg-user-dir VIDEOS 2>/dev/null || echo "$HOME/Videos")"
 
-    # Read the hardware variables injected by install.sh directly out of the JSON
-    HW_ENV=$(jq -r '.hardwareEnvs[]? // empty' "$SETTINGS_FILE")
+    # Read the hardware variables injected by install.sh directly out of the JSON.
+    # Sanitize before use: AQ_DRM_DEVICES is split on ":" by Aquamarine. A PCI
+    # by-path (pci-0000:06:00.0) shreds into invalid fragments -> "Found no
+    # gpus" -> Hyprland crash -> black screen -> login loop. Resolve by-path
+    # to /dev/dri/cardN and drop anything that is not an existing dri node.
+    sanitize_hw_env() {
+        local line key value seg real resolved ok
+        while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            # Accept "env = KEY,VALUE", "env=KEY,VALUE", or bare "KEY,VALUE"
+            line=$(printf '%s' "$line" | sed -E 's/^[[:space:]]*env[[:space:]]*=[[:space:]]*//; s/^[[:space:]]*env[[:space:]]+//')
+            key="${line%%,*}"
+            value="${line#*,}"
+            key=$(printf '%s' "$key" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+            value=$(printf '%s' "$value" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+            [ -z "$key" ] && continue
+            if [ "$key" = "AQ_DRM_DEVICES" ]; then
+                if printf '%s' "$value" | grep -Eq 'by-path|pci-'; then
+                    resolved=""
+                    for seg in $(printf '%s' "$value" | tr ':' ' '); do
+                        [ -e "$seg" ] || continue
+                        real=$(readlink -f "$seg" 2>/dev/null || true)
+                        [ -n "$real" ] && resolved="${resolved:+$resolved:}$real"
+                    done
+                    value="$resolved"
+                fi
+                ok=1
+                [ -n "$value" ] || ok=0
+                for seg in $(printf '%s' "$value" | tr ':' ' '); do
+                    [ -z "$seg" ] && continue
+                    case "$seg" in
+                        /dev/dri/*) [ -e "$seg" ] || ok=0 ;;
+                        *) ok=0 ;;
+                    esac
+                done
+                [ "$ok" -eq 1 ] || continue
+            fi
+            printf 'env = %s,%s\n' "$key" "$value"
+        done
+    }
+    HW_ENV=$(jq -r '.hardwareEnvs[]? // empty' "$SETTINGS_FILE" | sanitize_hw_env)
 
     # 1. Regenerate env.conf using the template
     echo "Regenerating env.conf..."
